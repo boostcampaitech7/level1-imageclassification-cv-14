@@ -1,0 +1,17 @@
+# 데이터 제외
+data/
+
+# 베이스라인 코드 제외
+baseline_code.ipynb
+
+# eda도 일단 제외
+eda.ipynb
+
+# 대용량 파일 제외
+*.pt
+
+# mac에서 생기는 파일 제외
+.DS_Store
+
+# pyc 제외
+__pycache__/
