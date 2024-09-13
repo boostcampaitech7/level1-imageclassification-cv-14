@@ -1,5 +1,6 @@
 import torch
 
+
 class BaseConfig:
     def __init__(self):
         # 학습 경로
@@ -33,6 +34,7 @@ class BaseConfig:
         self.epochs_per_lr_decay = 2
 
         # Device
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'mps'
+
 
 config = BaseConfig()
