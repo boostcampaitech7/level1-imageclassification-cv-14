@@ -10,6 +10,9 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, SubsetRandomSampler
 
+import time
+import numpy as np
+
 class Trainer:
     def __init__(
         self,
@@ -54,8 +57,6 @@ class Trainer:
             train_loader = DataLoader(self.train_dataset, batch_size=16, sampler=train_subsampler)
             val_loader = DataLoader(self.val_dataset, batch_size=16, sampler=val_subsampler)
 
-            # 각 폴드마다 새로운 모델 인스턴스 생성 (초기화된 모델, 사전 학습된 가중치 사용)
-            model_copy = self.model.__class__().to(self.device)
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 
             # 옵티마이저 초기화

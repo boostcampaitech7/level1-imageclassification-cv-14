@@ -8,7 +8,7 @@ from dataset.dataset import CustomDataset
 from models.convnext_model import Convnext_Model
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.cv_trainer import Trainer
-from utils.inference import inference, load_model
+from utils.inference import inference, load_model, inference_convnext
 
 
 def main():
@@ -69,7 +69,7 @@ def test():
         load_model(config.save_result_path, "best_model.pt")
     )
 
-    predictions = inference(model, 
+    predictions = inference_convnext(model, 
                             config.device, 
                             test_loader)
 
