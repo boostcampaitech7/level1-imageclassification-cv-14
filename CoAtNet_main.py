@@ -16,7 +16,7 @@ def main():
 
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
 
-    train_transform = AlbumentationsTransform(is_train=True, num_classes=config.num_classes)
+    train_transform = AlbumentationsTransform(is_train=True)
     val_transform = AlbumentationsTransform(is_train=False)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
