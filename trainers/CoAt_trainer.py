@@ -66,7 +66,7 @@ class Trainer:
         for images, targets in progress_bar:
             images, targets = images.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
-            outputs = self.model(images.unsqueeze(0))
+            outputs = self.model(images)
             loss = self.loss_fn(outputs, targets)
             loss.backward()
             self.optimizer.step()
@@ -86,7 +86,7 @@ class Trainer:
         with torch.no_grad():
             for images, targets in progress_bar:
                 images, targets = images.to(self.device), targets.to(self.device)
-                outputs = self.model(images.unsqueeze(0))    
+                outputs = self.model(images)    
                 loss = self.loss_fn(outputs, targets)
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
