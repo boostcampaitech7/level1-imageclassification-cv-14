@@ -21,8 +21,9 @@ class ClipCustomDataset(Dataset):
         self.image_paths = info_df['image_path'].tolist()  # 이미지 파일 경로 목록
         
         if not self.is_inference:
-            label_to_text = self.label_to_text(info_df)
-            self.targets = info_df['target'].map(label_to_text).tolist()  # 각 이미지에 대한 레이블 목록
+            self.label_to_text_res = self.label_to_text(info_df)
+            self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록
+
 
     def __len__(self) -> int:
         # 데이터셋의 총 이미지 수를 반환합니다.
@@ -35,10 +36,11 @@ class ClipCustomDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # BGR 포맷을 RGB 포맷으로 변환합니다.
 
         if self.is_inference:
-            return self.transform(image, )
+            return self.transform()
         else:
             target = self.targets[index]  # 해당 이미지의 레이블
-            return image, target  # 변환된 이미지와 레이블을 튜플 형태로 반환합니다. 
+            res = self.transform(image, target)
+            return res, target  # 변환된 이미지와 레이블을 튜플 형태로 반환합니다. 
         
     def label_to_text(self, dataset : pd.DataFrame):
         label_to_text = {}
