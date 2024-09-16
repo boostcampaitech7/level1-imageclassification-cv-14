@@ -71,13 +71,13 @@ class CLIPTrainer:
                 attention_mask = batch['attention_mask'].to(self.device)
             )
 
-            print(dir(outputs))
-            print(outputs)
-
-            loss = self.loss_fn(outputs, targets)
+            loss = self.loss_fn(outputs.logits_per_image,
+                                outputs.logits_per_text,
+                                self.device)
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
+            
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
         
