@@ -32,11 +32,13 @@ def main():
     
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
+                                  num_workers=config.num_workers,
                                   shuffle=config.train_shuffle,
                                   collate_fn=train_dataset.preprocess)
     
     val_loader = get_dataloader(val_dataset,
                                 batch_size=config.batch_size,
+                                num_workers=config.num_workers,
                                 shuffle=config.val_shuffle,
                                 collate_fn=val_dataset.preprocess)
     
@@ -85,6 +87,7 @@ def test():
     
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
+                                 num_workers=config.num_workers,
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
     
