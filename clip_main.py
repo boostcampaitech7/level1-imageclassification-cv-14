@@ -6,8 +6,8 @@ from utils.data_related import data_split, get_dataloader
 from transforms.clip_transform import ClipProcessor
 from dataset.clip_dataset import ClipCustomDataset
 from models.clip_model import ClipCustomModel
-from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from losses.clip_loss import CLIPLoss
+from trainers.clip_trainer import CLIPTrainer
 from utils.inference import inference, load_model
 
 
@@ -30,12 +30,12 @@ def main():
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
                                   shuffle=config.train_shuffle,
-                                  collate_fn=None)
+                                  collate_fn=train_dataset.preprocess)
     
     val_loader = get_dataloader(val_dataset,
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle,
-                                collate_fn=None)
+                                collate_fn=val_dataset.preprocess)
     
     model = ClipCustomModel(config.model_name)
 
@@ -54,9 +54,9 @@ def main():
         gamma=config.scheduler_gamma
     )
 
-    loss_fn = CrossEntropyLoss()
+    loss_fn = CLIPLoss()
 
-    trainer = Trainer(
+    trainer = CLIPTrainer(
         model=model,
         device=config.device,
         train_loader=train_loader,
@@ -101,4 +101,4 @@ def test():
 
 if __name__ == "__main__":
     main()
-    test()
+    # test()
