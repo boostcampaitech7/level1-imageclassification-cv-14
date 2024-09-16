@@ -8,7 +8,7 @@ from dataset.clip_dataset import ClipCustomDataset
 from models.clip_model import ClipCustomModel
 from losses.clip_loss import CLIPLoss
 from trainers.clip_trainer import CLIPTrainer
-from utils.inference import inference, load_model
+from utils.inference import inference_clip, load_model
 
 
 def main():
@@ -21,11 +21,14 @@ def main():
 
     train_dataset = ClipCustomDataset(config.train_data_dir_path,
                                   train_df,
-                                  train_transform)
+                                  train_transform,
+                                  is_inference = False,
+                                  is_train=True)
     
     val_dataset = ClipCustomDataset(config.train_data_dir_path,
                                   val_df,
-                                  val_transform)
+                                  val_transform,
+                                  is_inference = False)
     
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
@@ -91,7 +94,7 @@ def test():
         load_model(config.save_result_path, "best_model.pt")
     )
 
-    predictions = inference(model, 
+    predictions = inference_clip(model, 
                             config.device, 
                             test_loader)
 
@@ -101,4 +104,4 @@ def test():
 
 if __name__ == "__main__":
     main()
-    # test()
+    test()

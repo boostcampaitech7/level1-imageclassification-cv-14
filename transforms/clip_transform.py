@@ -6,4 +6,5 @@ class ClipProcessor:
 
     def __call__(self, input_image, input_text):
         return self.processor(text=input_text, images=input_image, return_tensors="pt", padding=True)
+    
         

@@ -12,7 +12,8 @@ class ClipCustomDataset(Dataset):
         root_dir: str, 
         info_df: pd.DataFrame, 
         transform: Callable,
-        is_inference: bool = False
+        is_inference: bool = False,
+        is_train: bool = False
     ):
         # 데이터셋의 기본 경로, 이미지 변환 방법, 이미지 경로 및 레이블을 초기화합니다.
         self.root_dir = root_dir  # 이미지 파일들이 저장된 기본 디렉토리
@@ -23,6 +24,9 @@ class ClipCustomDataset(Dataset):
         if not self.is_inference:
             self.label_to_text_res = self.label_to_text(info_df)
             self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록
+
+        if not is_train:
+            self.label_to_text_res = self.transform.tokenizer([v for v in self.label_to_text_res.values()])
 
 
     def __len__(self) -> int:

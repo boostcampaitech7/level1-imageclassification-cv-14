@@ -91,10 +91,15 @@ class CLIPTrainer:
         progress_bar = tqdm(self.val_loader, desc="Validating", leave=False)
         
         with torch.no_grad():
-            for images, targets in progress_bar:
-                images, targets = images.to(self.device), targets.to(self.device)
-                outputs = self.model(images)    
-                loss = self.loss_fn(outputs, targets)
+            for batch in progress_bar:
+                outputs = self.model(
+                    pixel_values = batch['pixel_values'].to(self.device),
+                    **self.val_loader.dataset.label_to_text_res,
+                )    
+
+                loss = self.loss_fn(outputs.logits_per_image,
+                                    outputs.logits_per_text,
+                                    self.device)
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
         
