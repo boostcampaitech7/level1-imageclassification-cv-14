@@ -31,9 +31,8 @@ def main():
                                   is_inference = False)
     
     global label_to_text
-    label_to_text = train_dataset.label_to_text_res
     label_to_text = {k: torch.tensor(v, device=config.device) for k, v in train_dataset.label_to_text_res.items()}
-    
+
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
                                   num_workers=config.num_workers,
@@ -113,4 +112,4 @@ def test():
 
 if __name__ == "__main__":
     main()
-    test()
+    # test()

@@ -23,7 +23,7 @@ class ClipCustomDataset(Dataset):
         if not self.is_inference:
             self.label_to_text_res = self.label_to_text(info_df)
             self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록
-            self.label_to_text_res = self.transform.processor.tokenizer([v for v in self.label_to_text_res.values()])
+            self.label_to_text_res = self.transform.processor.tokenizer([v for v in self.label_to_text_res.values()], padding=True)
 
     def __len__(self) -> int:
         # 데이터셋의 총 이미지 수를 반환합니다.
