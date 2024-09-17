@@ -12,7 +12,7 @@ class CLIPLoss(nn.Module):
     def loss_fn(self, logits_i, logits_t, device):
         labels = torch.arange(logits_i.shape[0], device=device)
         loss_i = F.cross_entropy(logits_i, labels)
-        loss_t = F.cross_entropy(logits_t, labels)
+        loss_t = F.cross_entropy(logits_t.T, labels)
         loss = (loss_i + loss_t) / 2
         
         return loss
