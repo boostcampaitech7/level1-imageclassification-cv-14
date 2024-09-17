@@ -67,15 +67,14 @@ class CLIPTrainer:
         
         for batch in progress_bar:
             self.optimizer.zero_grad()
-            outputs = self.model(
-                pixel_values = batch['pixel_values'].to(self.device),
-                input_ids = batch['input_ids'].to(self.device),
-                attention_mask = batch['attention_mask'].to(self.device)
-            )
+            inputs = {k: v.to(self.device) for k, v in batch.items()}
+
+            outputs = self.model(**inputs)
 
             loss = self.loss_fn(outputs.logits_per_image,
                                 outputs.logits_per_text,
                                 self.device)
+
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
@@ -94,9 +93,10 @@ class CLIPTrainer:
         
         with torch.no_grad():
             for batch in progress_bar:
+                text_inputs = {key: val.to(self.device) for key, val in self.label_to_text.items()}
                 outputs = self.model(
                     pixel_values = batch['pixel_values'].to(self.device),
-                    **self.label_to_text
+                    **text_inputs
                 )    
 
                 loss = self.loss_fn(outputs.logits_per_image,
@@ -115,6 +115,6 @@ class CLIPTrainer:
             train_loss = self.train_epoch()
             val_loss = self.validate()
             print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
-
+            
             self.save_model(epoch, val_loss)
             self.scheduler.step()

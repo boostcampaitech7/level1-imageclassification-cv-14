@@ -51,12 +51,8 @@ class ClipCustomDataset(Dataset):
             texts = None
         else:
             texts = [data['text'] for data in batch]
-
-        inputs = self.transform(images, texts)
-        return {
-            "image" : images,
-            **inputs
-        }
+            
+        return self.transform(images, texts)
         
     def label_to_text(self, dataset : pd.DataFrame):
         label_to_text = {}
