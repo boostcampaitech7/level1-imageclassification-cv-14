@@ -54,8 +54,8 @@ class Trainer:
             val_subsampler = SubsetRandomSampler(val_idx)
 
             # 데이터 로더 생성
-            train_loader = DataLoader(self.train_dataset, batch_size=16, sampler=train_subsampler)
-            val_loader = DataLoader(self.val_dataset, batch_size=16, sampler=val_subsampler)
+            train_loader = DataLoader(self.train_dataset, batch_size=32, sampler=train_subsampler)
+            val_loader = DataLoader(self.val_dataset, batch_size=32, sampler=val_subsampler)
 
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 

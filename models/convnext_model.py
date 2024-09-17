@@ -11,7 +11,7 @@ class Convnext_Model(nn.Module):
         model_name: str, 
         num_classes: int, 
         pretrained: bool,
-        fine_tune_layers: int = 2,  # 학습할 마지막 N개의 블록
+        fine_tune_layers: int = 3,  # 학습할 마지막 N개의 블록
         **kwargs
     ):
         super(Convnext_Model, self).__init__()
