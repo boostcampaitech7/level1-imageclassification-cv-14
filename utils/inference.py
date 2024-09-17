@@ -35,7 +35,8 @@ def inference(
 def inference_clip(
     model: nn.Module, 
     device: torch.device, 
-    test_loader: DataLoader
+    test_loader: DataLoader,
+    label_to_text : dict
 ):
     # 모델을 평가 모드로 설정
     model.to(device)
@@ -47,7 +48,7 @@ def inference_clip(
             # 모델을 통해 예측 수행
             outputs = model(
                 pixel_values = batch['pixel_values'].to(device),
-                **test_loader.dataset.label_to_text_res
+                **label_to_text
             )
             probs = outputs.logits_per_image.softmax(dim = 1)
             preds = probs.argmax(dim=1)

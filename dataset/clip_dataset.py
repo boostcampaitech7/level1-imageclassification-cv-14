@@ -13,7 +13,6 @@ class ClipCustomDataset(Dataset):
         info_df: pd.DataFrame, 
         transform: Callable,
         is_inference: bool = False,
-        is_train: bool = False
     ):
         # 데이터셋의 기본 경로, 이미지 변환 방법, 이미지 경로 및 레이블을 초기화합니다.
         self.root_dir = root_dir  # 이미지 파일들이 저장된 기본 디렉토리
@@ -24,10 +23,7 @@ class ClipCustomDataset(Dataset):
         if not self.is_inference:
             self.label_to_text_res = self.label_to_text(info_df)
             self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록
-
-        if not is_train:
-            self.label_to_text_res = self.transform.tokenizer([v for v in self.label_to_text_res.values()])
-
+            self.label_to_text_res = self.transform.processor.tokenizer([v for v in self.label_to_text_res.values()])
 
     def __len__(self) -> int:
         # 데이터셋의 총 이미지 수를 반환합니다.
@@ -64,8 +60,8 @@ class ClipCustomDataset(Dataset):
         
     def label_to_text(self, dataset : pd.DataFrame):
         label_to_text = {}
-        df = dataset.groupby('class_name', group_keys=False).apply(lambda x: x.sample(1), include_groups=False)
-
+        df = dataset.groupby('class_name', group_keys=False).apply(lambda x: x.sample(1))
+        
         str_data = """n02119789 1 kit_fox
         n02100735 2 English_setter
         n02110185 3 Siberian_husky
@@ -1073,8 +1069,6 @@ class ClipCustomDataset(Dataset):
             label_dict[tmp[0]] = tmp[2]
 
         for _, df_data in df.iterrows():
-            dir_name = df_data.image_path.split("/")[0]
-            if dir_name in label_dict:
-                label_to_text[df_data.target] = "a sketch of " + label_dict[dir_name]
-
+            if df_data.class_name in label_dict:
+                label_to_text[df_data.target] = "a sketch of " + label_dict[df_data.class_name]
         return label_to_text

@@ -22,23 +22,25 @@ def main():
     train_dataset = ClipCustomDataset(config.train_data_dir_path,
                                   train_df,
                                   train_transform,
-                                  is_inference = False,
-                                  is_train=True)
+                                  is_inference = False)
     
     val_dataset = ClipCustomDataset(config.train_data_dir_path,
                                   val_df,
                                   val_transform,
                                   is_inference = False)
     
+    global label_to_text
+    label_to_text = train_dataset.label_to_text_res
+    
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
-                                  num_workers=config.num_workers,
+                                #   num_workers=config.num_workers,
                                   shuffle=config.train_shuffle,
                                   collate_fn=train_dataset.preprocess)
     
     val_loader = get_dataloader(val_dataset,
                                 batch_size=config.batch_size,
-                                num_workers=config.num_workers,
+                                # num_workers=config.num_workers,
                                 shuffle=config.val_shuffle,
                                 collate_fn=val_dataset.preprocess)
     
@@ -87,7 +89,7 @@ def test():
     
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
-                                 num_workers=config.num_workers,
+                                #  num_workers=config.num_workers,
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
     
@@ -99,7 +101,8 @@ def test():
 
     predictions = inference_clip(model, 
                             config.device, 
-                            test_loader)
+                            test_loader,
+                            label_to_text)
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
