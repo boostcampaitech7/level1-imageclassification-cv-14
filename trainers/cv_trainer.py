@@ -86,13 +86,14 @@ class Trainer:
                 start_time = time.time()
 
                 # 올바른 데이터 로더 전달
-                train_loss = self.train_epoch(train_loader)
-                val_loss = self.validate(val_loader)
+                train_loss, train_accuracy = self.train_epoch(train_loader)
+                val_loss, val_accuracy = self.validate(val_loader)
 
                 end_time = time.time()
                 epoch_time = end_time - start_time
 
                 print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
+                print(f"Epoch {epoch + 1}, Train Acc: {train_accuracy:.4f}, Validation Acc: {val_accuracy:.4f}")
                 print(f"Epoch {epoch + 1} took {epoch_time:.2f} seconds\n")
 
                 self.save_model(epoch, val_loss)
@@ -104,6 +105,8 @@ class Trainer:
         # 한 에폭 동안의 훈련을 진행
         self.model.train()
         total_loss = 0.0
+        correct_predictions = 0
+        total_predictions = 0
         progress_bar = tqdm(train_loader, desc="Training", leave=False)
 
         for images, targets in progress_bar:
@@ -117,14 +120,24 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
+
+            _, predicted = torch.max(outputs, 1)  # 가장 높은 값의 인덱스를 예측값으로 선택
+            correct_predictions += (predicted == targets).sum().item()
+            total_predictions += targets.size(0)
+
             progress_bar.set_postfix(loss=loss.item())
 
-        return total_loss / len(train_loader)
+        average_loss = total_loss / len(train_loader)
+        accuracy = correct_predictions / total_predictions * 100  # 퍼센트로 변환
+
+        return [average_loss, accuracy]
 
     def validate(self, val_loader) -> float:
         # 모델의 검증을 진행
         self.model.eval()
         total_loss = 0.0
+        correct_predictions = 0
+        total_predictions = 0
         progress_bar = tqdm(val_loader, desc="Validating", leave=False)
 
         with torch.no_grad():
@@ -136,9 +149,17 @@ class Trainer:
                 outputs = self.model(images)
                 loss = self.loss_fn(outputs, targets)
                 total_loss += loss.item()
-                progress_bar.set_postfix(loss=loss.item())
 
-        return total_loss / len(val_loader)
+                _, predicted = torch.max(outputs, 1)  # 가장 높은 값의 인덱스를 예측값으로 선택
+                correct_predictions += (predicted == targets).sum().item()
+                total_predictions += targets.size(0)
+
+                progress_bar.set_postfix(loss=loss.item())
+        # 최종 loss 및 accuracy 계산
+        average_loss = total_loss / len(val_loader)
+        accuracy = correct_predictions / total_predictions * 100  # 퍼센트로 변환
+        
+        return [average_loss, accuracy]
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
