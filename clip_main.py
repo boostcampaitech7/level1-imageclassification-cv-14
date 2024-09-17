@@ -1,3 +1,4 @@
+import torch
 import pandas as pd
 import torch.optim as optim
 
@@ -31,6 +32,7 @@ def main():
     
     global label_to_text
     label_to_text = train_dataset.label_to_text_res
+    label_to_text = {k: torch.tensor(v, device=config.device) for k, v in train_dataset.label_to_text_res.items()}
     
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
@@ -72,7 +74,8 @@ def main():
         scheduler=scheduler,
         loss_fn=loss_fn,
         epochs=config.epochs,
-        result_path=config.save_result_path
+        result_path=config.save_result_path,
+        label_to_text= label_to_text
     )
 
     trainer.train()
@@ -106,7 +109,7 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("output.csv", index=False)
+    test_info.to_csv("clip_output.csv", index=False)
 
 if __name__ == "__main__":
     main()

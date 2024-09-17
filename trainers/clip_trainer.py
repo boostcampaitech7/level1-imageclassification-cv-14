@@ -18,7 +18,8 @@ class CLIPTrainer:
         scheduler: optim.lr_scheduler,
         loss_fn: torch.nn.modules.loss._Loss, 
         epochs: int,
-        result_path: str
+        result_path: str,
+        label_to_text : dict
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model  # 훈련할 모델
@@ -32,6 +33,7 @@ class CLIPTrainer:
         self.result_path = result_path  # 모델 저장 경로
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
+        self.label_to_text = label_to_text
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
@@ -94,7 +96,7 @@ class CLIPTrainer:
             for batch in progress_bar:
                 outputs = self.model(
                     pixel_values = batch['pixel_values'].to(self.device),
-                    **self.val_loader.dataset.label_to_text_res,
+                    **self.label_to_text
                 )    
 
                 loss = self.loss_fn(outputs.logits_per_image,
