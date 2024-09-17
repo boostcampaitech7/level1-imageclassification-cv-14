@@ -10,8 +10,12 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, SubsetRandomSampler
 
+from transforms.sketch_transform import SketchTransform
+from dataset.dataset import CustomDataset
+
 import time
 import numpy as np
+import pandas as pd
 
 class Trainer:
     def __init__(
@@ -39,7 +43,7 @@ class Trainer:
         self.result_path = result_path
         self.n_splits = n_splits  # K-Fold의 K 값
         self.best_models = []
-        self.lowest_loss = float('inf')
+        self.lowest_loss = float(0)
 
     def train_with_cv(self):
         # StratifiedKFold를 사용한 교차 검증 학습
@@ -50,12 +54,23 @@ class Trainer:
 
         for fold, (train_idx, val_idx) in enumerate(skf.split(X=np.zeros(len(targets)), y=targets)):
             print(f"Fold {fold + 1}/{self.n_splits}")
-            train_subsampler = SubsetRandomSampler(train_idx)
-            val_subsampler = SubsetRandomSampler(val_idx)
+            train_transform = SketchTransform(is_train=True)
+            val_transform = SketchTransform(is_train=False)
 
-            # 데이터 로더 생성
-            train_loader = DataLoader(self.train_dataset, batch_size=32, sampler=train_subsampler)
-            val_loader = DataLoader(self.val_dataset, batch_size=32, sampler=val_subsampler)
+             # info_df를 외부에서 전달
+            info_df = pd.DataFrame({'image_path': self.train_dataset.image_paths, 'target': self.train_dataset.targets})
+
+            # 각 Fold마다 훈련과 검증 데이터를 위한 데이터셋 생성
+            train_subset = CustomDataset(self.train_dataset.root_dir,
+                                        info_df.iloc[train_idx].reset_index(drop=True),
+                                        transform=train_transform)  # 훈련용 Transform 적용
+            val_subset = CustomDataset(self.val_dataset.root_dir, 
+                                    info_df.iloc[val_idx].reset_index(drop=True),
+                                    transform=val_transform)  # 검증용 Transform 적용
+
+        # 데이터 로더 생성
+            train_loader = DataLoader(train_subset, batch_size=32, shuffle=True)
+            val_loader = DataLoader(val_subset, batch_size=32, shuffle=False)
 
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 
@@ -96,7 +111,7 @@ class Trainer:
                 print(f"Epoch {epoch + 1}, Train Acc: {train_accuracy:.4f}, Validation Acc: {val_accuracy:.4f}")
                 print(f"Epoch {epoch + 1} took {epoch_time:.2f} seconds\n")
 
-                self.save_model(epoch, val_loss)
+                self.save_model(epoch, val_loss, val_accuracy + train_accuracy)
                 
                 # 학습률 스케줄러 업데이트
                 self.scheduler.step()
@@ -161,7 +176,7 @@ class Trainer:
         
         return [average_loss, accuracy]
 
-    def save_model(self, epoch, loss):
+    def save_model(self, epoch, loss, acc):
         # 모델 저장 경로 설정
         os.makedirs(self.result_path, exist_ok=True)
 
@@ -178,8 +193,8 @@ class Trainer:
                 os.remove(path_to_remove)
 
         # 가장 낮은 손실의 모델 저장
-        if loss < self.lowest_loss:
-            self.lowest_loss = loss
+        if acc > self.lowest_loss:
+            self.lowest_loss = acc
             best_model_path = os.path.join(self.result_path, 'best_model.pt')
             torch.save(self.model.state_dict(), best_model_path)
-            print(f"Save {epoch}epoch result. Loss = {loss:.4f}")
+            print(f"Save {epoch}epoch result. Loss = {loss:.4f}, Acc = {(acc/2):.4f}")

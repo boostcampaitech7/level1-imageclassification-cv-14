@@ -1,9 +1,11 @@
 import pandas as pd
 import torch.optim as optim
+import torch
 
 from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
 from transforms.convnext_transform import ConvnextTransform
+from transforms.sketch_transform import SketchTransform
 from dataset.dataset import CustomDataset
 from models.convnext_model import Convnext_Model
 from losses.cross_entropy_loss import CrossEntropyLoss
@@ -17,7 +19,7 @@ def main():
 
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
 
-    train_transform = ConvnextTransform(is_train=True)
+    train_transform = SketchTransform(is_train=True)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   train_df,
@@ -32,8 +34,8 @@ def main():
         lr=config.lr
     )
 
-    #loss_fn = CrossEntropyLoss()
-    loss_fn = FocalLoss()
+    loss_fn = CrossEntropyLoss()
+    #loss_fn = FocalLoss()
 
     trainer = Trainer(
         model=model,
@@ -48,7 +50,7 @@ def main():
         n_splits=5  # K-Fold의 K 값, 예를 들어 5로 설정
         )
 
-    trainer.train_with_cv()
+    #trainer.train_with_cv()
 
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
@@ -68,7 +70,7 @@ def test():
     model = Convnext_Model(model_name = "convnext_large_mlp.clip_laion2b_soup_ft_in12k_in1k_320", num_classes = 500, pretrained = True)
 
     model.load_state_dict(
-        load_model(config.save_result_path, "best_model.pt")
+        load_model(config.save_result_path, "model_epoch_0_loss_0.1751.pt")
     )
 
     predictions = inference_convnext(model, 
