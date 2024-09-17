@@ -46,9 +46,10 @@ def inference_clip(
     with torch.no_grad():  # Gradient 계산을 비활성화
         for batch in tqdm(test_loader):            
             # 모델을 통해 예측 수행
+            text_inputs = {k : v.to(device) for k, v in label_to_text.items()}
             outputs = model(
                 pixel_values = batch['pixel_values'].to(device),
-                **label_to_text
+                **text_inputs
             )
             probs = outputs.logits_per_image.softmax(dim = 1)
             preds = probs.argmax(dim=1)

@@ -93,7 +93,7 @@ class CLIPTrainer:
         
         with torch.no_grad():
             for batch in progress_bar:
-                text_inputs = {key: val.to(self.device) for key, val in self.label_to_text.items()}
+                text_inputs = {k : v.to(self.device) for k, v in self.label_to_text.items()}
                 outputs = self.model(
                     pixel_values = batch['pixel_values'].to(self.device),
                     **text_inputs
@@ -115,6 +115,6 @@ class CLIPTrainer:
             train_loss = self.train_epoch()
             val_loss = self.validate()
             print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
-            
+
             self.save_model(epoch, val_loss)
             self.scheduler.step()
