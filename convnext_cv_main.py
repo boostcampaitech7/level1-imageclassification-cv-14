@@ -9,6 +9,7 @@ from models.convnext_model import Convnext_Model
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.cv_trainer import Trainer
 from utils.inference import inference, load_model, inference_convnext
+from losses.Focal_Loss import FocalLoss
 
 
 def main():
@@ -31,7 +32,8 @@ def main():
         lr=config.lr
     )
 
-    loss_fn = CrossEntropyLoss()
+    #loss_fn = CrossEntropyLoss()
+    loss_fn = FocalLoss()
 
     trainer = Trainer(
         model=model,
