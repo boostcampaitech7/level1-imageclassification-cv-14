@@ -50,7 +50,7 @@ def main():
         n_splits=5  # K-Fold의 K 값, 예를 들어 5로 설정
         )
 
-    #trainer.train_with_cv()
+    trainer.train_with_cv()
 
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
@@ -70,7 +70,7 @@ def test():
     model = Convnext_Model(model_name = "convnext_large_mlp.clip_laion2b_soup_ft_in12k_in1k_320", num_classes = 500, pretrained = True)
 
     model.load_state_dict(
-        load_model(config.save_result_path, "model_epoch_0_loss_0.1751.pt")
+        load_model(config.save_result_path, "best_model.pt")
     )
 
     predictions = inference_convnext(model, 
