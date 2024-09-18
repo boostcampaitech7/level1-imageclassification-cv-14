@@ -15,5 +15,5 @@ class TimeDecorator:
         m, s = divmod(remainder, 60)
         ms = td.microseconds // 1000    
 
-        print(f"Running Time : {h:02d}h {m:02d}m {s:02d}s {ms:03d}ms")
+        print(f"{self.func.__name__} Running Time : {h:02d}h {m:02d}m {s:02d}s {ms:03d}ms")
 
