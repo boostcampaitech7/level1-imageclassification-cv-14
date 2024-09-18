@@ -96,7 +96,8 @@ def test():
                                  batch_size=config.batch_size,
                                  num_workers=config.num_workers,
                                  shuffle=config.test_shuffle,
-                                 drop_last=False)
+                                 drop_last=False,
+                                 collate_fn=test_dataset.preprocess)
     
     model = ClipCustomModel(config.model_name)
 
@@ -115,4 +116,4 @@ def test():
 
 if __name__ == "__main__":
     main()
-    # test()
+    test()
