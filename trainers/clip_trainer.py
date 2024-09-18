@@ -93,11 +93,8 @@ class CLIPTrainer:
         
         with torch.no_grad():
             for batch in progress_bar:
-                text_inputs = {k : v.to(self.device) for k, v in self.label_to_text.items()}
-                outputs = self.model(
-                    pixel_values = batch['pixel_values'].to(self.device),
-                    **text_inputs
-                )    
+                inputs = {k: v.to(self.device) for k, v in batch.items()}
+                outputs = self.model(**inputs)    
 
                 loss = self.loss_fn(outputs.logits_per_image,
                                     outputs.logits_per_text,
