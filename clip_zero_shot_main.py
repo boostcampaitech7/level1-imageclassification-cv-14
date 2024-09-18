@@ -48,9 +48,6 @@ def test():
                             config.device, 
                             test_loader,
                             label_to_text)
-    
-    print(predictions)
-    print(len(predictions))
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})

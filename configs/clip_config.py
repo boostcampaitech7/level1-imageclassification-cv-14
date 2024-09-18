@@ -27,7 +27,7 @@ class ClipConfig:
         # 하이퍼 파라미터
         self.batch_size = 32
         self.num_workers = 4
-        self.lr = 0.001  # Learning rate
+        self.lr = 1e-5  # Learning rate
         self.epochs = 5
 
         # 스케줄러 초기화
