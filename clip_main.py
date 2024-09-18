@@ -13,8 +13,9 @@ from models.clip_model import ClipCustomModel
 from losses.clip_loss import CLIPLoss
 from trainers.clip_trainer import CLIPTrainer
 from utils.inference import inference_clip, load_model
+from utils.TimeDecorator import TimeDecorator
 
-
+@TimeDecorator
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
 
@@ -82,6 +83,7 @@ def main():
 
     trainer.train()
 
+@TimeDecorator
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
@@ -112,7 +114,7 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("clip_output.csv", index=False)
+    test_info.to_csv("clip_epoch_10_output.csv", index=False)
 
 if __name__ == "__main__":
     main()

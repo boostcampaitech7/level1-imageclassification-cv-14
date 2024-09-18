@@ -5,7 +5,7 @@ class ClipConfig:
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './clip_result'
+        self.save_result_path = './clip_epoch10_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
@@ -28,7 +28,7 @@ class ClipConfig:
         self.batch_size = 32
         self.num_workers = 4
         self.lr = 1e-5  # Learning rate
-        self.epochs = 5
+        self.epochs = 10
 
         # 스케줄러 초기화
         self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소
