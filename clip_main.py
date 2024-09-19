@@ -51,6 +51,14 @@ def main():
     
     model = ClipCustomModel(config.model_name)
 
+    for name, parma in model.model.named_parameters():
+        if name.startswith("visual_projection"):
+            parma.requires_grad = True
+        elif name.startswith("text_projection"):
+            parma.requires_grad = True
+        else:
+            parma.requires_grad = False
+
     model.to(config.device)
 
     optimizer = optim.Adam(
@@ -114,7 +122,7 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("clip_epoch_10_output.csv", index=False)
+    test_info.to_csv("clip_last_layer_learnable_output.csv", index=False)
 
 if __name__ == "__main__":
     main()
