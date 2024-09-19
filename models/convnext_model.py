@@ -22,7 +22,7 @@ class Convnext_Model(nn.Module):
 
         # 모든 레이어 동결
         for param in self.model.parameters():
-            param.requires_grad = False
+            param.requires_grad = True
 
         # 최종 분류기 레이어 수정
         in_features = self.model.get_classifier().in_features
