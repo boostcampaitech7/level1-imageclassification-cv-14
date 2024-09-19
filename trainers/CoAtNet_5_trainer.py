@@ -85,11 +85,11 @@ class Trainer:
             loss = self.loss_fn(outputs, targets)
             loss.backward()
             self.optimizer.step()
-            self.scheduler.step()
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
         
         return total_loss / len(self.train_loader)
+        
 
     def validate(self) -> float:
         # 모델의 검증을 진행
@@ -128,5 +128,6 @@ class Trainer:
             val_loss = self.validate()
             print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
 
+            
             self.save_model(epoch, val_loss)
             self.scheduler.step()
