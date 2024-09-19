@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, SubsetRandomSampler
 
-from transforms.sketch_transform import SketchTransform
+from transforms.sketch_transform_develop import SketchTransform
 from dataset.dataset import CustomDataset
 
 import time
@@ -43,7 +43,7 @@ class Trainer:
         self.result_path = result_path
         self.n_splits = n_splits  # K-Fold의 K 값
         self.best_models = []
-        self.lowest_loss = float(0)
+        self.lowest_loss = float('inf')
 
     def train_with_cv(self):
         # StratifiedKFold를 사용한 교차 검증 학습
@@ -75,7 +75,7 @@ class Trainer:
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 
             # 옵티마이저 초기화
-            self.optimizer = torch.optim.Adam(self.model.parameters())  
+            self.optimizer = optim.Adam(self.model.parameters())
 
             # 스케줄러 초기화: StepLR 스케줄러를 사용하여 학습률 조정
 # 스케줄러 초기화
@@ -193,8 +193,8 @@ class Trainer:
                 os.remove(path_to_remove)
 
         # 가장 낮은 손실의 모델 저장
-        if acc > self.lowest_loss:
-            self.lowest_loss = acc
+        if loss < self.lowest_loss:
+            self.lowest_loss = loss
             best_model_path = os.path.join(self.result_path, 'best_model.pt')
             torch.save(self.model.state_dict(), best_model_path)
             print(f"Save {epoch}epoch result. Loss = {loss:.4f}, Acc = {(acc/2):.4f}")

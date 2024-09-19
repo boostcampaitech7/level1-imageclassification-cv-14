@@ -5,7 +5,7 @@ import torch
 from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
 from transforms.convnext_transform import ConvnextTransform
-from transforms.sketch_transform import SketchTransform
+from transforms.sketch_transform_develop import SketchTransform
 from dataset.dataset import CustomDataset
 from models.convnext_model import Convnext_Model
 from losses.cross_entropy_loss import CrossEntropyLoss
@@ -29,10 +29,9 @@ def main():
 
     model.to(config.device)
 
-    optimizer = optim.AdamW(
+    optimizer = optim.Adam(
         model.parameters(),
-        lr=1e-4,
-        weight_decay=1e-5
+        lr=config.lr
     )
 
     loss_fn = CrossEntropyLoss()
