@@ -36,7 +36,9 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
 
-    model = TimmModel("resnet18", config.num_classes, True)
+    # model = TimmModel("resnet18", config.num_classes, True)
+    from models.ViT import ViTModel
+    model = ViTModel(config.num_classes)
 
     model.to(config.device)
 
