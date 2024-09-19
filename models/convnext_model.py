@@ -11,7 +11,6 @@ class Convnext_Model(nn.Module):
         model_name: str, 
         num_classes: int, 
         pretrained: bool,
-        fine_tune_layers: list = ['stages.3', 'stages.2'],
         fine_tune_layers_num: int = 3,  # 학습할 마지막 N개의 블록
         dropout_rate = 0.2,
         **kwargs
@@ -26,10 +25,8 @@ class Convnext_Model(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = False
 
-        # Fine-Tuning을 적용할 레이어의 동결 해제
-        for name, param in self.model.named_parameters():
-            if any(layer_name in name for layer_name in fine_tune_layers):
-                param.requires_grad = True
+        # Global Average Pooling (GAP) 추가: 특징 텐서를 분류기 레이어에 맞는 크기로 변환
+        self.gap = nn.AdaptiveAvgPool2d((1, 1))
 
         # 최종 분류기 레이어 수정
         in_features = self.model.get_classifier().in_features
@@ -47,6 +44,8 @@ class Convnext_Model(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model.forward_features(x)  # 특징 추출
+        x = self.gap(x)  # Global Average Pooling 적용
+        x = torch.flatten(x, 1)  # (Batch, Channels, 1, 1) -> (Batch, Channels)
         x = self.dropout(x)  # Dropout 적용
         x = self.model.classifier(x)  # 분류기 레이어
         return x
