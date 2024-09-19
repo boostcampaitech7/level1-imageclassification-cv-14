@@ -69,16 +69,20 @@ class Trainer:
                                     transform=val_transform)  # 검증용 Transform 적용
 
         # 데이터 로더 생성
-            train_loader = DataLoader(train_subset, batch_size=32, shuffle=True)
-            val_loader = DataLoader(val_subset, batch_size=32, shuffle=False)
+            train_loader = DataLoader(train_subset, batch_size=16, shuffle=True)
+            val_loader = DataLoader(val_subset, batch_size=16, shuffle=False)
 
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 
             # 옵티마이저 초기화
-            self.optimizer = optim.Adam(self.model.parameters())
+            self.optimizer = optim.Adam(
+                    self.model.parameters(),
+                    lr=0.001,
+                    weight_decay=1e-4
+                )
 
             # 스케줄러 초기화: StepLR 스케줄러를 사용하여 학습률 조정
-# 스케줄러 초기화
+            # 스케줄러 초기화
             scheduler_step_size = 30  # 매 30step마다 학습률 감소
             scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소
 
