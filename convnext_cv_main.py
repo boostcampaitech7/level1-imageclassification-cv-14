@@ -29,13 +29,13 @@ def main():
 
     model.to(config.device)
 
-    optimizer = optim.Adam(
+    optimizer = optim.AdamW(
         model.parameters(),
-        lr=config.lr
+        lr=1e-4,
+        weight_decay=1e-5
     )
 
     loss_fn = CrossEntropyLoss()
-    #loss_fn = FocalLoss()
 
     trainer = Trainer(
         model=model,
