@@ -6,7 +6,9 @@ import torch.optim as optim
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
-from torch.amp import GradScaler, autocast
+from torch.amp.grad_scaler import GradScaler
+from torch.amp.autocast_mode import autocast
+
 
 class ResTrainer:
     def __init__(
