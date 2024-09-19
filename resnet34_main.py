@@ -10,7 +10,7 @@ from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from trainers.resnet_trainer import ResTrainer
 from utils.inference import inference, load_model
 from utils.TimeDecorator import TimeDecorator
 
@@ -62,7 +62,7 @@ def main():
 
     loss_fn = CrossEntropyLoss()
 
-    trainer = Trainer(
+    trainer = ResTrainer(
         model=model,
         device=config.device,
         train_loader=train_loader,
