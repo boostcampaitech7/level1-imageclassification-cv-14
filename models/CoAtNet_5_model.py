@@ -8,7 +8,7 @@ class CoAtNetV5FineTune(nn.Module):
         
         # `timm` 라이브러리를 사용하여 CoAtNet v5 모델 로드
         # timm 모델 중 "coatnet_5" 이름을 사용하여 사전 학습된 모델 로드
-        self.backbone = timm.create_model('coatnet_5', pretrained=pretrained, features_only=True)
+        self.backbone = timm.create_model('coatnet_1_rw_224', pretrained=pretrained, features_only=True)
 
         # 마지막 레이어에 새로운 클래스 수로 분류 레이어를 추가
         in_features = self.backbone.feature_info[-1]['num_chs']
@@ -17,6 +17,7 @@ class CoAtNetV5FineTune(nn.Module):
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),  # AdaptiveAvgPool로 공간 차원 축소
             nn.Flatten(),  # 1차원으로 변환
+            nn.Dropout(p=0.3),
             nn.Linear(in_features, num_classes)  # 새로운 FC 레이어
         )
     
@@ -31,4 +32,3 @@ class CoAtNetV5FineTune(nn.Module):
 
 def get_model(num_classes: int, pretrained: bool = True):
     return CoAtNetV5FineTune(num_classes, pretrained)
-

@@ -3,13 +3,13 @@ import torch
 class BaseConfig:
     def __init__(self):
         # 학습 경로
-        self.train_data_dir_path = './data/train'
-        self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './train_result'
+        self.train_data_dir_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/train'
+        self.train_data_info_file_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/train.csv'
+        self.save_result_path = '/data/ephemeral/home/level1-imageclassification-cv-14/train_result'
 
         # 추론 경로
-        self.test_data_dir_path = './data/test'
-        self.test_data_info_file_path = './data/test.csv'
+        self.test_data_dir_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/test'
+        self.test_data_info_file_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/test.csv'
 
         # 데이터 분할
         self.test_size = 0.2
@@ -25,9 +25,10 @@ class BaseConfig:
         self.num_workers = 4
         self.lr = 1e-4 # Learning rate
         self.backbone_lr = 1e-5
-        self.epochs = 30
+        self.weight_decay = 5e-4
+        self.epochs = 10
         # 백본 고정 해제 시점 (고정 에폭)
-        self.freeze_backbone_epochs = 5  # 초기에 classifier만 학습
+        self.freeze_backbone_epochs = 3 # 초기에 classifier만 학습
 
         # 스케줄러 초기화
         self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소

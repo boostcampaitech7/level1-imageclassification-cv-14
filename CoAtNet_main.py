@@ -1,9 +1,10 @@
 import pandas as pd
+import torch 
 import torch.optim as optim
 
 from configs.CoAtNet_5_config import config
 from utils.data_related import data_split, get_dataloader
-from transforms.albumentations_transform import AlbumentationsTransform
+from transforms.CoAtNet_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.CoAtNet_5_model import CoAtNetV5FineTune
 from losses.cross_entropy_loss import CrossEntropyLoss
@@ -92,11 +93,9 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("output.csv", index=False)
+    test_info.to_csv("output-4.csv", index=False)
 
 if __name__ == "__main__":
     main()
     test()
-    
-    
     
