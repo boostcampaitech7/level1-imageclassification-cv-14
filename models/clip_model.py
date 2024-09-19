@@ -1,14 +1,20 @@
 import torch.nn as nn
 from transformers import CLIPModel
 
-class ClipCutomModel(nn.Module):
+
+class ClipCustomModel(nn.Module):
     def __init__(self,
                  model_name: str):
-        super(ClipCutomModel, self).__init__()
+        super(ClipCustomModel, self).__init__()
         self.model = CLIPModel.from_pretrained(model_name)
-    
+
+        # for name, p in self.model.named_parameters():
+        #     if not name.startswith('clas')
+
     def forward(self, x):
         # with torch.no_grad():
         #     features = self.model.encode_image(x).float()  # Convert to float32
         # return self.classifier(features)
-        return self.model(x)
+        res = self.model(x)
+        print("forward", res)
+        return res

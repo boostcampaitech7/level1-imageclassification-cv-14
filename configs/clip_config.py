@@ -1,5 +1,6 @@
 import torch
 
+
 class ClipConfig:
     def __init__(self):
         # 학습 경로
@@ -22,6 +23,7 @@ class ClipConfig:
 
         # 모델이름
         self.model_name = "openai/clip-vit-large-patch14"
+        self.transform_name = "openai/clip-vit-large-patch14"
 
         # 하이퍼 파라미터
         self.batch_size = 64
@@ -37,5 +39,6 @@ class ClipConfig:
 
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 config = ClipConfig()

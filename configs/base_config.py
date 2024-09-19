@@ -34,7 +34,7 @@ class BaseConfig:
         self.epochs_per_lr_decay = 2
 
         # Device
-        self.device = 'cuda' if torch.cuda.is_available() else 'mps'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 config = BaseConfig()

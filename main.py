@@ -36,11 +36,8 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
 
-    # model = TimmModel("resnet18", config.num_classes, True)
-    # ViT 모델 사용
-    from models.ViT import ViTModel
+    model = TimmModel("resnet18", config.num_classes, True)
 
-    model = ViTModel(num_classes=config.num_classes, pretrained=True)
     model.to(config.device)
 
     optimizer = optim.Adam(
@@ -58,7 +55,6 @@ def main():
 
     loss_fn = CrossEntropyLoss()
 
-    print("train start")
     trainer = Trainer(
         model=model,
         device=config.device,
