@@ -164,7 +164,7 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("clip_last_layer_learnable_output.csv", index=False)
+    test_info.to_csv(config.output_name, index=False)
 
 if __name__ == "__main__":
     # main()

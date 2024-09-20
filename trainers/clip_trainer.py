@@ -166,13 +166,13 @@ class CLIPTrainer:
                                                batch_size=self.config.batch_size,
                                                num_workers=self.config.num_workers,
                                                shuffle=self.config.train_shuffle,
-                                               collate_fn=train_dataset.preprocess)
+                                               collate_fn=self.total_dataset.preprocess)
                             
             self.val_loader = get_dataloader(val_dataset,
                                              batch_size=self.config.batch_size,
                                              num_workers=self.config.num_workers,
                                              shuffle=self.config.val_shuffle,
-                                             collate_fn=train_dataset.preprocess)
+                                             collate_fn=self.total_dataset.preprocess)
 
             for epoch in range(self.epochs):
                 print(f"Epoch {epoch+1}/{self.epochs}")
