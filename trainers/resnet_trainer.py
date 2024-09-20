@@ -6,7 +6,7 @@ import torch.optim as optim
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
-from torch.amp.grad_scaler import GradScaler
+from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 
 
@@ -35,7 +35,7 @@ class ResTrainer:
         self.result_path = result_path  # 모델 저장 경로
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
-        self.scaler = GradScaler(device=self.device)
+        self.scaler = GradScaler()
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
