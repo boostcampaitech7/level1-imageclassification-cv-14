@@ -6,6 +6,7 @@ from utils.data_related import data_split, get_dataloader
 from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
+from models.ViT import ViTModel
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.base_trainer import Trainer
 from utils.inference import inference, load_model
@@ -36,16 +37,20 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
 
-    # model = TimmModel("resnet18", config.num_classes, True)
-    from models.ViT import ViTModel
-    model = ViTModel(config.num_classes)
+    model = ViTModel(config.num_classes, False)
 
     model.to(config.device)
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=config.lr
-    )
+    # 분류기 헤드와 다른 파라미터를 분리합니다
+    classifier_params = model.vit.head.parameters()
+    other_params = [p for n, p in model.named_parameters()
+                    if not n.startswith('vit.head')]
+
+    # 옵티마이저를 설정합니다. 분류기 헤드에만 weight decay를 적용합니다
+    optimizer = optim.Adam([
+        {'params': classifier_params, 'weight_decay': 0.01},
+        {'params': other_params, 'weight_decay': 0}
+    ], lr=config.lr)
 
     scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
 
@@ -87,7 +92,7 @@ def test():
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
 
-    model = TimmModel("resnet18", config.num_classes, False)
+    model = ViTModel(config.num_classes)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")
