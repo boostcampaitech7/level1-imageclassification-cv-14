@@ -18,7 +18,6 @@ from utils.TimeDecorator import TimeDecorator
 @TimeDecorator
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
-
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
 
     train_transform = ClipProcessor(transform_name=config.transform_name)
@@ -84,6 +83,57 @@ def main():
     trainer.train()
 
 @TimeDecorator
+def cv_main():
+    data_info = pd.read_csv(config.train_data_info_file_path)
+
+    total_transform = ClipProcessor(transform_name=config.transform_name)
+
+    total_dataset = ClipCustomDataset(config.train_data_dir_path,
+                                  data_info,
+                                  total_transform,
+                                  is_inference = False)
+    
+    global label_to_text
+    label_to_text = {k: torch.tensor(v, device=config.device) for k, v in total_dataset.label_to_text_res.items()}
+    
+    model = ClipCustomModel(config.model_name)
+
+    model.to(config.device)
+
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=config.lr
+    )
+
+    data_len = torch.floor(torch.tensor(data_info.shape[0] * (1 - config.test_size))) 
+    len_loader = torch.ceil(data_len / config.batch_size)
+    scheduler_step_size = len_loader * config.epochs_per_lr_decay
+
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer,
+        step_size=scheduler_step_size,
+        gamma=config.scheduler_gamma
+    )
+
+    loss_fn = CLIPLoss()
+
+    trainer = CLIPTrainer(
+        model=model,
+        device=config.device,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        loss_fn=loss_fn,
+        epochs=config.epochs,
+        result_path=config.save_result_path,
+        label_to_text= label_to_text,
+        total_dataset=total_dataset,
+        config=config
+    )
+
+    trainer.train_cv_kfold()
+
+
+@TimeDecorator
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
@@ -117,5 +167,6 @@ def test():
     test_info.to_csv("clip_last_layer_learnable_output.csv", index=False)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    cv_main()
     test()

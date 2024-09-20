@@ -16,22 +16,23 @@ class CLIPTrainer:
         self, 
         model: nn.Module, 
         device: torch.device, 
-        total_dataset: Dataset,
-        train_loader: DataLoader, 
-        val_loader: DataLoader, 
         optimizer: optim.Optimizer,
         scheduler: optim.lr_scheduler,
         loss_fn: torch.nn.modules.loss._Loss, 
         epochs: int,
         result_path: str,
         label_to_text : dict,
-        config
+        config = None,
+        total_dataset: Dataset = None,
+        train_loader: DataLoader = None, 
+        val_loader: DataLoader = None, 
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model  # 훈련할 모델
         self.device = device  # 연산을 수행할 디바이스 (CPU or GPU)
-        self.train_loader = train_loader  # 훈련 데이터 로더
-        self.val_loader = val_loader  # 검증 데이터 로더
+        if total_dataset is None:
+            self.train_loader = train_loader  # 훈련 데이터 로더
+            self.val_loader = val_loader  # 검증 데이터 로더
         self.optimizer = optimizer  # 최적화 알고리즘
         self.scheduler = scheduler # 학습률 스케줄러
         self.loss_fn = loss_fn  # 손실 함수
@@ -45,15 +46,19 @@ class CLIPTrainer:
         self.scaler = GradScaler()
 
         # cross-validation
-        self.total_dataset = total_dataset
+        if total_dataset is not None:
+            self.total_dataset = total_dataset
         self.config = config
 
-    def save_model(self, epoch, loss):
+    def save_model(self, epoch, loss, fold = None):
         # 모델 저장 경로 설정
         os.makedirs(self.result_path, exist_ok=True)
 
         # 현재 에폭 모델 저장
-        current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch}_loss_{loss:.4f}.pt')
+        if fold is not None:
+            current_model_path = os.path.join(self.result_path, f'model_fold_{fold}_epoch_{epoch}_loss_{loss:.4f}.pt')  
+        else:  
+            current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch}_loss_{loss:.4f}.pt')
         torch.save(self.model.state_dict(), current_model_path)
 
         # 최상위 3개 모델 관리
@@ -69,7 +74,10 @@ class CLIPTrainer:
             self.lowest_loss = loss
             best_model_path = os.path.join(self.result_path, 'best_model.pt')
             torch.save(self.model.state_dict(), best_model_path)
-            print(f"Save {epoch}epoch result. Loss = {loss:.4f}")
+            if fold is not None:
+                print(f"Save {fold}fold {epoch}epoch result. Loss = {loss:.4f}")
+            else:
+                print(f"Save {epoch}epoch result. Loss = {loss:.4f}")
 
     def train_epoch(self) -> float:
         # 한 에폭 동안의 훈련을 진행
@@ -175,7 +183,7 @@ class CLIPTrainer:
                 print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
                 print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
-                self.save_model(epoch, val_loss)
+                self.save_model(epoch, val_loss, fold + 1)
                 self.scheduler.step()
             
             print(f"Finished Fold {fold + 1}")
