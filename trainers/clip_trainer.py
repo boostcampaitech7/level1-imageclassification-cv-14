@@ -109,8 +109,8 @@ class CLIPTrainer:
             progress_bar.set_postfix(loss=loss.item())
 
             _, pred = torch.max(outputs.logits_per_image, 1)
-            correct_pred += (pred == torch.arange(outputs.logits_per_image.shape[0])).sum().item()
-            total_pred += outputs.logits_per_image.shape[0]
+            correct_pred += (pred == torch.arange(len(pred))).sum().item()
+            total_pred += len(pred)
         
         return total_loss / len(self.train_loader), correct_pred / total_pred * 100
 
@@ -135,8 +135,8 @@ class CLIPTrainer:
                 progress_bar.set_postfix(loss=loss.item())
 
                 _, pred = torch.max(outputs.logits_per_image, 1)
-                correct_pred += (pred == torch.arange(outputs.logits_per_image.shape[0])).sum().item()
-                total_pred += outputs.logits_per_image.shape[0]
+                correct_pred += (pred == torch.arange(len(pred))).sum().item()
+                total_pred += len(pred)
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
