@@ -108,7 +108,7 @@ class CLIPTrainer:
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
 
-            _, pred = torch.max(outputs.logits_per_image, 1)
+            _, pred = torch.max(outputs.logits_per_image, 1).cpu()
             correct_pred += (pred == torch.arange(len(pred))).sum().item()
             total_pred += len(pred)
         
@@ -134,7 +134,7 @@ class CLIPTrainer:
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
 
-                _, pred = torch.max(outputs.logits_per_image, 1)
+                _, pred = torch.max(outputs.logits_per_image, 1).cpu()
                 correct_pred += (pred == torch.arange(len(pred))).sum().item()
                 total_pred += len(pred)
         
