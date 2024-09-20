@@ -5,15 +5,18 @@ import torch.nn as nn
 import torch.optim as optim
 
 from tqdm.auto import tqdm
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, Subset
 from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
+from sklearn.model_selection import StratifiedKFold
+from utils.data_related import get_dataloader
 
 class CLIPTrainer:
     def __init__(
         self, 
         model: nn.Module, 
         device: torch.device, 
+        total_dataset: Dataset,
         train_loader: DataLoader, 
         val_loader: DataLoader, 
         optimizer: optim.Optimizer,
@@ -21,7 +24,8 @@ class CLIPTrainer:
         loss_fn: torch.nn.modules.loss._Loss, 
         epochs: int,
         result_path: str,
-        label_to_text : dict
+        label_to_text : dict,
+        config
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model  # 훈련할 모델
@@ -36,7 +40,13 @@ class CLIPTrainer:
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
         self.label_to_text = label_to_text
+        
+        # amp
         self.scaler = GradScaler()
+
+        # cross-validation
+        self.total_dataset = total_dataset
+        self.config = config
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
@@ -134,3 +144,38 @@ class CLIPTrainer:
 
             self.save_model(epoch, val_loss)
             self.scheduler.step()
+
+    def train_cv_kfold(self, n_splits : int = 5):
+        skf = StratifiedKFold(n_splits=n_splits)
+
+        for fold, (train_idx, val_idx) in enumerate(skf.split(self.total_dataset, self.total_dataset.targets)):
+            print(f"Fold {fold+1}/{n_splits}")
+
+            train_dataset = Subset(self.total_dataset, train_idx)
+            val_dataset = Subset(self.total_dataset, val_idx)
+
+            self.train_loader = get_dataloader(train_dataset,
+                                               batch_size=self.config.batch_size,
+                                               num_workers=self.config.num_workers,
+                                               shuffle=self.config.train_shuffle,
+                                               collate_fn=train_dataset.preprocess)
+                            
+            self.val_loader = get_dataloader(val_dataset,
+                                             batch_size=self.config.batch_size,
+                                             num_workers=self.config.num_workers,
+                                             shuffle=self.config.val_shuffle,
+                                             collate_fn=train_dataset.preprocess)
+
+            for epoch in range(self.epochs):
+                print(f"Epoch {epoch+1}/{self.epochs}")
+                
+                train_loss, train_acc = self.train_epoch()
+                val_loss, val_acc = self.validate()
+
+                print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
+                print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
+
+                self.save_model(epoch, val_loss)
+                self.scheduler.step()
+            
+            print(f"Finished Fold {fold + 1}")

@@ -51,14 +51,6 @@ def main():
     
     model = ClipCustomModel(config.model_name)
 
-    for name, parma in model.model.named_parameters():
-        if name.startswith("visual_projection"):
-            parma.requires_grad = True
-        elif name.startswith("text_projection"):
-            parma.requires_grad = True
-        else:
-            parma.requires_grad = False
-
     model.to(config.device)
 
     optimizer = optim.Adam(
