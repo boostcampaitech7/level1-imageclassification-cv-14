@@ -3,14 +3,14 @@ import torch.optim as optim
 
 from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
-from transforms.albumentations_transform import AlbumentationsTransform
+# from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from models.ViT import ViTModel
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.base_trainer import Trainer
 from utils.inference import inference, load_model
-
+from transforms.vit_transform import ViTAutoImageTransform
 
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
@@ -18,8 +18,10 @@ def main():
     train_df, val_df = data_split(
         train_info, config.test_size, train_info['target'])
 
-    train_transform = AlbumentationsTransform(is_train=True)
-    val_transform = AlbumentationsTransform(is_train=False)
+    # train_transform = AlbumentationsTransform(is_train=True)
+    # val_transform = AlbumentationsTransform(is_train=False)
+    train_transform = ViTAutoImageTransform()
+    val_transform = ViTAutoImageTransform()
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   train_df,
@@ -31,26 +33,32 @@ def main():
 
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
+                                  num_workers = config.num_workers,
                                   shuffle=config.train_shuffle)
 
     val_loader = get_dataloader(val_dataset,
                                 batch_size=config.batch_size,
+                                num_workers = config.num_workers,
                                 shuffle=config.val_shuffle)
 
-    model = ViTModel(config.num_classes, False)
+    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
 
     model.to(config.device)
 
     # 분류기 헤드와 다른 파라미터를 분리합니다
-    classifier_params = model.vit.head.parameters()
-    other_params = [p for n, p in model.named_parameters()
-                    if not n.startswith('vit.head')]
+    # classifier_params = model.vit.head.parameters()
+    # other_params = [p for n, p in model.named_parameters()
+    #                 if not n.startswith('vit.head')]
 
-    # 옵티마이저를 설정합니다. 분류기 헤드에만 weight decay를 적용합니다
-    optimizer = optim.Adam([
-        {'params': classifier_params, 'weight_decay': 0.01},
-        {'params': other_params, 'weight_decay': 0}
-    ], lr=config.lr)
+    # # 옵티마이저를 설정합니다. 분류기 헤드에만 weight decay를 적용합니다
+    # optimizer = optim.Adam([
+    #     {'params': classifier_params, 'weight_decay': 0.001},
+    #     {'params': other_params, 'weight_decay': 0}
+    # ], lr=config.lr)
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=config.lr
+    )
 
     scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
 
@@ -73,6 +81,7 @@ def main():
         epochs=config.epochs,
         result_path=config.save_result_path
     )
+    
 
     trainer.train()
 
@@ -80,7 +89,8 @@ def main():
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = AlbumentationsTransform(is_train=False)
+    # test_transform = AlbumentationsTransform(is_train=False)
+    test_transform = ViTAutoImageTransform()
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                  test_info,
@@ -90,9 +100,10 @@ def test():
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
                                  shuffle=config.test_shuffle,
+                                 num_workers = config.num_workers,
                                  drop_last=False)
 
-    model = ViTModel(config.num_classes)
+    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")

@@ -22,7 +22,7 @@ class BaseConfig:
         self.test_shuffle = False
 
         # 하이퍼 파라미터
-        self.batch_size = 64
+        self.batch_size = 32
         self.num_workers = 4
         self.lr = 0.001  # Learning rate
         self.epochs = 5

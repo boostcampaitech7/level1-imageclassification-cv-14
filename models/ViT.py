@@ -1,21 +1,49 @@
-import torch
+from transformers import ViTForImageClassification
 import torch.nn as nn
-from timm import create_model
-
+import torch
 
 class ViTModel(nn.Module):
     """
-    ViT-G (Vision Transformer Giant) 구조를 사용한 이미지 분류 모델
+    개선된 ViTModel
     """
-
-    def __init__(self, num_classes: int, pretrained: bool = True):
+    def __init__(
+        self, 
+        model_name: str,
+        num_classes: int,
+        fine_tune: bool = False,
+        dropout_rate: float = 0.1
+    ):
         super(ViTModel, self).__init__()
-
-        # timm 라이브러리를 사용하여 사전 훈련된 ViT-G 모델 로드
-        self.vit = create_model('vit_giant_patch14_224', pretrained=pretrained)
-
+        self.model = ViTForImageClassification.from_pretrained(model_name, 
+                                                               num_labels=num_classes,
+                                                               ignore_mismatched_sizes=True)
+        
+        # 미세 조정 옵션 추가
+        if not fine_tune:
+            for name, param in self.model.named_parameters():
+                if not name.startswith('classifier'):
+                    param.requires_grad = False
+        
+        # 드롭아웃 레이어 추가
+        self.dropout = nn.Dropout(dropout_rate)
+        
         # 분류기 헤드 수정
-        self.vit.head = nn.Linear(self.vit.head.in_features, num_classes)
-
+        self.model.classifier = nn.Sequential(
+            nn.Linear(self.model.config.hidden_size, 512),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(512, num_classes)
+        )
+    
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.vit(x)
+        outputs = self.model(x)
+        return self.dropout(outputs.logits)
+    
+    def freeze_base_model(self):
+        for name, param in self.model.named_parameters():
+            if not name.startswith('classifier'):
+                param.requires_grad = False
+    
+    def unfreeze_base_model(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
