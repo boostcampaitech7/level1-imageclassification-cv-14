@@ -6,6 +6,8 @@ import torch.optim as optim
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
+from torch.cuda.amp.grad_scaler import GradScaler
+from torch.amp.autocast_mode import autocast
 
 class CLIPTrainer:
     def __init__(
@@ -34,6 +36,7 @@ class CLIPTrainer:
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
         self.label_to_text = label_to_text
+        self.scaler = GradScaler()
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
@@ -63,32 +66,43 @@ class CLIPTrainer:
         self.model.train()
         
         total_loss = 0.0
+        correct_pred = 0
+        total_pred = 0
+
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
         for batch in progress_bar:
             self.optimizer.zero_grad()
             inputs = {k: v.to(self.device) for k, v in batch.items()}
 
-            outputs = self.model(**inputs)
+            with autocast(device_type=self.device):
+                outputs = self.model(**inputs)
+                loss = self.loss_fn(outputs.logits_per_image,
+                                    outputs.logits_per_text,
+                                    self.device)
 
-            loss = self.loss_fn(outputs.logits_per_image,
-                                outputs.logits_per_text,
-                                self.device)
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
 
-            loss.backward()
-            self.optimizer.step()
             self.scheduler.step()
             
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
+
+            _, pred = torch.max(outputs.logist_per_image, 1)
+            correct_pred += (pred == torch.arange(outputs.logist_per_image.shape[0])).sum().item()
+            total_pred += outputs.logist_per_image.shape[0]
         
-        return total_loss / len(self.train_loader)
+        return total_loss / len(self.train_loader), correct_pred / total_pred * 100
 
     def validate(self) -> float:
         # 모델의 검증을 진행
         self.model.eval()
         
         total_loss = 0.0
+        correct_pred = 0
+        total_pred = 0
         progress_bar = tqdm(self.val_loader, desc="Validating", leave=False)
         
         with torch.no_grad():
@@ -101,17 +115,22 @@ class CLIPTrainer:
                                     self.device)
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
+
+                _, pred = torch.max(outputs.logist_per_image, 1)
+                correct_pred += (pred == torch.arange(outputs.logist_per_image.shape[0])).sum().item()
+                total_pred += outputs.logist_per_image.shape[0]
         
-        return total_loss / len(self.val_loader)
+        return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
     def train(self) -> None:
         # 전체 훈련 과정을 관리
         for epoch in range(self.epochs):
             print(f"Epoch {epoch+1}/{self.epochs}")
             
-            train_loss = self.train_epoch()
-            val_loss = self.validate()
-            print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
+            train_loss, train_acc = self.train_epoch()
+            val_loss, val_acc = self.validate()
+            print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
+            print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
             self.save_model(epoch, val_loss)
             self.scheduler.step()
