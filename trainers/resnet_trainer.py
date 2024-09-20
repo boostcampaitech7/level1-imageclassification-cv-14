@@ -65,6 +65,9 @@ class ResTrainer:
         self.model.train()
         
         total_loss = 0.0
+        correct_pred = 0
+        total_pred = 0
+
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
         for images, targets in progress_bar:
@@ -84,15 +87,21 @@ class ResTrainer:
 
             self.scheduler.step()
             total_loss += loss.item()
+            _, pred = torch.max(outputs, 1)
+            correct_pred += (pred == targets).sum().item()
+            total_pred += targets.size(0)
+            
             progress_bar.set_postfix(loss=loss.item())
         
-        return total_loss / len(self.train_loader)
+        return total_loss / len(self.train_loader), correct_pred / total_pred * 100
 
     def validate(self) -> float:
         # 모델의 검증을 진행
         self.model.eval()
         
         total_loss = 0.0
+        correct_pred = 0
+        total_pred = 0
         progress_bar = tqdm(self.val_loader, desc="Validating", leave=False)
         
         with torch.no_grad():
@@ -101,18 +110,24 @@ class ResTrainer:
                 outputs = self.model(images)    
                 loss = self.loss_fn(outputs, targets)
                 total_loss += loss.item()
+
+                _, pred = torch.max(outputs, 1)
+                correct_pred += (pred == targets).sum().item()
+                total_pred += targets.size(0)
+
                 progress_bar.set_postfix(loss=loss.item())
         
-        return total_loss / len(self.val_loader)
+        return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
     def train(self) -> None:
         # 전체 훈련 과정을 관리
         for epoch in range(self.epochs):
             print(f"Epoch {epoch+1}/{self.epochs}")
             
-            train_loss = self.train_epoch()
-            val_loss = self.validate()
-            print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
+            train_loss, train_acc = self.train_epoch()
+            val_loss, val_acc = self.validate()
+            print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
+            print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
             self.save_model(epoch, val_loss)
             self.scheduler.step()
