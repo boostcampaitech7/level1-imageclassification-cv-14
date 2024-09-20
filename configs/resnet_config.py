@@ -1,18 +1,18 @@
 import torch
 
-class ResNet34:
+class ResNetConfig:
     def __init__(self):
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './resnet34_amp_result'
+        self.save_result_path = './resnet152_amp_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
 
         # 출력 파일 명
-        self.output_name = 'resnet34_amp_output.csv'
+        self.output_name = 'resnet152_amp_output.csv'
 
         # 데이터 분할
         self.test_size = 0.2
@@ -24,7 +24,7 @@ class ResNet34:
         self.test_shuffle = False
 
         # 모델이름
-        self.model_name = "resnet34"
+        self.model_name = "resnet152"
 
         # 하이퍼 파라미터
         self.batch_size = 32
@@ -41,4 +41,4 @@ class ResNet34:
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-config = ResNet34()
+config = ResNetConfig()

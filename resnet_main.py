@@ -4,7 +4,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import pandas as pd
 import torch.optim as optim
 
-from configs.resnet34_config import config
+from configs.resnet_config import config
 from utils.data_related import data_split, get_dataloader
 from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
