@@ -69,8 +69,8 @@ class Trainer:
                                     transform=val_transform)  # 검증용 Transform 적용
 
         # 데이터 로더 생성
-            train_loader = DataLoader(train_subset, batch_size=16, shuffle=True)
-            val_loader = DataLoader(val_subset, batch_size=16, shuffle=False)
+            train_loader = DataLoader(train_subset, batch_size=16, shuffle=True, num_workers = 4)
+            val_loader = DataLoader(val_subset, batch_size=16, shuffle=False, num_workers = 4)
 
             self.model.load_state_dict(self.model.state_dict())  # 사전 학습된 가중치 사용
 
