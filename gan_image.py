@@ -21,7 +21,7 @@ if __name__ == "__main__":
     output_dir = "./data/train/generated_images"
     
     # 5. 클래스당 생성할 이미지 수
-    num_images_per_class = 5
+    num_images_per_class = 10
     
     # 6. 업데이트된 CSV 파일 경로
     csv_file = "./gan/updated_dataset_with_generated_images.csv"

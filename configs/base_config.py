@@ -4,8 +4,8 @@ class BaseConfig:
     def __init__(self):
         # 학습 경로
         self.train_data_dir_path = './data/train'
-        self.train_data_info_file_path = './data/train.csv'
-        #self.train_data_info_file_path = './gan/updated_dataset_with_generated_images.csv'
+        #self.train_data_info_file_path = './data/train.csv'
+        self.train_data_info_file_path = './data/merged_train_with_generated.csv'
         self.save_result_path = './train_result'
 
         # 추론 경로
