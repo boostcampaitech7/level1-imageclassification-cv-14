@@ -13,7 +13,7 @@ class StableDiffusionImageGenerator:
 
     # 스케치 이미지를 생성하는 함수
     def generate_sketch(self, prompt: str, num_images: int):
-        images = self.pipe(prompt, num_inference_steps=30, num_images_per_prompt=num_images).images  # 이미지 생성
+        images = self.pipe(prompt, num_inference_steps=50, num_images_per_prompt=num_images).images  # 이미지 생성
         return images
 
     # 이미지를 저장하고 CSV 파일에 추가하는 함수
