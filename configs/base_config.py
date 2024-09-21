@@ -25,7 +25,7 @@ class BaseConfig:
         self.batch_size = 32
         self.num_workers = 4
         self.lr = 0.001  # Learning rate
-        self.epochs = 5
+        self.epochs = 10
 
         # 스케줄러 초기화
         self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소

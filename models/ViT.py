@@ -38,12 +38,3 @@ class ViTModel(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         outputs = self.model(x)
         return self.dropout(outputs.logits)
-    
-    def freeze_base_model(self):
-        for name, param in self.model.named_parameters():
-            if not name.startswith('classifier'):
-                param.requires_grad = False
-    
-    def unfreeze_base_model(self):
-        for param in self.model.parameters():
-            param.requires_grad = True
