@@ -5,34 +5,30 @@ import torch.nn as nn
 import torch.optim as optim
 
 from tqdm.auto import tqdm
-from torch.utils.data import DataLoader, Dataset, Subset
+from torch.utils.data import DataLoader
 from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
-from sklearn.model_selection import StratifiedKFold
-from utils.data_related import get_dataloader
+from utils.TimeDecorator import TimeDecorator
 
 class CLIPTrainer:
     def __init__(
         self, 
         model: nn.Module, 
         device: torch.device, 
+        train_loader: DataLoader, 
+        val_loader: DataLoader, 
         optimizer: optim.Optimizer,
         scheduler: optim.lr_scheduler,
         loss_fn: torch.nn.modules.loss._Loss, 
         epochs: int,
         result_path: str,
         label_to_text : dict,
-        config = None,
-        total_dataset: Dataset = None,
-        train_loader: DataLoader = None, 
-        val_loader: DataLoader = None, 
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model  # 훈련할 모델
         self.device = device  # 연산을 수행할 디바이스 (CPU or GPU)
-        if total_dataset is None:
-            self.train_loader = train_loader  # 훈련 데이터 로더
-            self.val_loader = val_loader  # 검증 데이터 로더
+        self.train_loader = train_loader  # 훈련 데이터 로더
+        self.val_loader = val_loader  # 검증 데이터 로더
         self.optimizer = optimizer  # 최적화 알고리즘
         self.scheduler = scheduler # 학습률 스케줄러
         self.loss_fn = loss_fn  # 손실 함수
@@ -45,11 +41,6 @@ class CLIPTrainer:
         # amp
         self.scaler = GradScaler()
 
-        # cross-validation
-        if total_dataset is not None:
-            self.total_dataset = total_dataset
-        self.config = config
-
     def save_model(self, epoch, loss, fold = None):
         # 모델 저장 경로 설정
         os.makedirs(self.result_path, exist_ok=True)
@@ -57,22 +48,28 @@ class CLIPTrainer:
         # 현재 에폭 모델 저장
         if fold is not None:
             current_model_path = os.path.join(self.result_path, f'model_fold_{fold}_epoch_{epoch}_loss_{loss:.4f}.pt')  
+            list_len = 0
+            best_model_path = f'{fold}fold_best_model.pt'
         else:  
             current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch}_loss_{loss:.4f}.pt')
+            list_len = 3
+            best_model_path = 'best_model.pt'
+
         torch.save(self.model.state_dict(), current_model_path)
 
         # 최상위 3개 모델 관리
         self.best_models.append((loss, epoch, current_model_path))
         self.best_models.sort()
-        if len(self.best_models) > 3:
+        if len(self.best_models) > list_len:
             _, _, path_to_remove = self.best_models.pop(-1)  # 가장 높은 손실 모델 삭제
             if os.path.exists(path_to_remove):
                 os.remove(path_to_remove)
 
         # 가장 낮은 손실의 모델 저장
+
         if loss < self.lowest_loss:
             self.lowest_loss = loss
-            best_model_path = os.path.join(self.result_path, 'best_model.pt')
+            best_model_path = os.path.join(self.result_path, best_model_path)
             torch.save(self.model.state_dict(), best_model_path)
             if fold is not None:
                 print(f"Save {fold}fold {epoch}epoch result. Loss = {loss:.4f}")
@@ -140,7 +137,8 @@ class CLIPTrainer:
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
-    def train(self) -> None:
+    @TimeDecorator
+    def train(self, fold = None) -> None:
         # 전체 훈련 과정을 관리
         for epoch in range(self.epochs):
             print(f"Epoch {epoch+1}/{self.epochs}")
@@ -150,40 +148,5 @@ class CLIPTrainer:
             print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
             print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
-            self.save_model(epoch, val_loss)
+            self.save_model(epoch, val_loss, fold)
             self.scheduler.step()
-
-    def train_cv_kfold(self, n_splits : int = 5):
-        skf = StratifiedKFold(n_splits=n_splits)
-
-        for fold, (train_idx, val_idx) in enumerate(skf.split(self.total_dataset, self.total_dataset.targets)):
-            print(f"Fold {fold+1}/{n_splits}")
-
-            train_dataset = Subset(self.total_dataset, train_idx)
-            val_dataset = Subset(self.total_dataset, val_idx)
-
-            self.train_loader = get_dataloader(train_dataset,
-                                               batch_size=self.config.batch_size,
-                                               num_workers=self.config.num_workers,
-                                               shuffle=self.config.train_shuffle,
-                                               collate_fn=self.total_dataset.preprocess)
-                            
-            self.val_loader = get_dataloader(val_dataset,
-                                             batch_size=self.config.batch_size,
-                                             num_workers=self.config.num_workers,
-                                             shuffle=self.config.val_shuffle,
-                                             collate_fn=self.total_dataset.preprocess)
-
-            for epoch in range(self.epochs):
-                print(f"Epoch {epoch+1}/{self.epochs}")
-                
-                train_loss, train_acc = self.train_epoch()
-                val_loss, val_acc = self.validate()
-
-                print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
-                print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
-
-                self.save_model(epoch, val_loss, fold + 1)
-                self.scheduler.step()
-            
-            print(f"Finished Fold {fold + 1}")

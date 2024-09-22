@@ -5,8 +5,9 @@ import torch
 import pandas as pd
 import torch.optim as optim
 
+
 from configs.clip_config import config
-from utils.data_related import data_split, get_dataloader
+from utils.data_related import data_split, get_dataloader, get_subset
 from transforms.clip_transform import ClipProcessor
 from dataset.clip_dataset import ClipCustomDataset
 from models.clip_model import ClipCustomModel
@@ -14,6 +15,7 @@ from losses.clip_loss import CLIPLoss
 from trainers.clip_trainer import CLIPTrainer
 from utils.inference import inference_clip, load_model
 from utils.TimeDecorator import TimeDecorator
+from sklearn.model_selection import StratifiedKFold
 
 @TimeDecorator
 def main():
@@ -95,42 +97,61 @@ def cv_main():
     
     global label_to_text
     label_to_text = {k: torch.tensor(v, device=config.device) for k, v in total_dataset.label_to_text_res.items()}
-    
-    model = ClipCustomModel(config.model_name)
 
-    model.to(config.device)
+    skf = StratifiedKFold(n_splits=config.n_splits, shuffle=config.cv_shuffle)
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=config.lr
-    )
+    for fold, (train_idx, val_idx) in enumerate(skf.split(total_dataset, total_dataset.targets)):
+        print(f"Fold {fold+1}/{config.n_splits}")
 
-    data_len = torch.floor(torch.tensor(data_info.shape[0] * (1 - config.test_size))) 
-    len_loader = torch.ceil(data_len / config.batch_size)
-    scheduler_step_size = len_loader * config.epochs_per_lr_decay
+        train_dataset = get_subset(total_dataset, train_idx)
+        val_dataset = get_subset(total_dataset, val_idx)
 
-    scheduler = optim.lr_scheduler.StepLR(
-        optimizer,
-        step_size=scheduler_step_size,
-        gamma=config.scheduler_gamma
-    )
+        train_loader = get_dataloader(train_dataset,
+                                      batch_size=config.batch_size,
+                                      num_workers=config.num_workers,
+                                      shuffle=config.train_shuffle,
+                                      collate_fn=train_dataset.preprocess)
+        
+        val_loader = get_dataloader(val_dataset,
+                                    batch_size=config.batch_size,
+                                    num_workers=config.num_workers,
+                                    shuffle=config.val_shuffle,
+                                    collate_fn=val_dataset.preprocess)
+        
+        model = ClipCustomModel(config.model_name)
 
-    loss_fn = CLIPLoss()
+        model.to(config.device)
 
-    trainer = CLIPTrainer(
-        model=model,
-        device=config.device,
-        optimizer=optimizer,
-        scheduler=scheduler,
-        loss_fn=loss_fn,
-        epochs=config.epochs,
-        result_path=config.save_result_path,
-        label_to_text= label_to_text,
-        total_dataset=total_dataset,
-        config=config
-    )
+        optimizer = optim.Adam(
+            model.parameters(),
+            lr=config.lr
+        )
 
-    trainer.train_cv_kfold()
+        scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
+
+        scheduler = optim.lr_scheduler.StepLR(
+            optimizer,
+            step_size=scheduler_step_size,
+            gamma=config.scheduler_gamma
+        )
+
+        loss_fn = CLIPLoss()
+
+        trainer = CLIPTrainer(
+            model=model,
+            device=config.device,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            loss_fn=loss_fn,
+            epochs=config.epochs,
+            result_path=config.save_result_path,
+            label_to_text= label_to_text
+        )
+
+        trainer.train()
+        print(f"Finished Fold {fold + 1}")
 
 
 @TimeDecorator
@@ -169,4 +190,4 @@ def test():
 if __name__ == "__main__":
     # main()
     cv_main()
-    test()
+    # test()
