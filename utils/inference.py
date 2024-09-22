@@ -58,6 +58,9 @@ def inference_clip(
             # 예측 결과 저장
             predictions.extend(probs.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
     
+    del model
+    torch.cuda.empty_cache()
+    
     return predictions
 
 # 모델 추론을 위한 함수
@@ -91,7 +94,7 @@ def inference_convnext(
 def load_model(path, name):
     return torch.load(os.path.join(path, name), map_location='cpu')
 
-def ensemble_predict(models, dataloader, device, inference_func, num_classes, **kwargs):
+def ensemble_predict(models, dataloader, device, num_classes, inference_func, **kwargs):
     '''
     soft voting 방식의 ensemble
     '''
@@ -100,4 +103,5 @@ def ensemble_predict(models, dataloader, device, inference_func, num_classes, **
         probs = inference_func(model, device, dataloader, **kwargs)
         predictions += probs
 
-    return predictions / len(models)
+    predictions = predictions / len(models)
+    return predictions.argmax(axis=1)

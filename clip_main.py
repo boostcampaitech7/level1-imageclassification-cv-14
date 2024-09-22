@@ -1,6 +1,7 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import gc
 import torch
 import pandas as pd
 import torch.optim as optim
@@ -13,7 +14,7 @@ from dataset.clip_dataset import ClipCustomDataset
 from models.clip_model import ClipCustomModel
 from losses.clip_loss import CLIPLoss
 from trainers.clip_trainer import CLIPTrainer
-from utils.inference import inference_clip, load_model
+from utils.inference import inference_clip, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
@@ -153,6 +154,50 @@ def cv_main():
         trainer.train()
         print(f"Finished Fold {fold + 1}")
 
+        # fold 끝난 후 메모리 정리
+        del model, optimizer, scheduler, trainer
+        torch.cuda.empty_cache()
+        gc.collect()
+
+
+@TimeDecorator
+def cv_test():
+    test_info = pd.read_csv(config.test_data_info_file_path)
+
+    test_transform = ClipProcessor(config.model_name)
+
+    test_dataset = ClipCustomDataset(config.test_data_dir_path,
+                                  test_info,
+                                  test_transform,
+                                  is_inference=True)
+    
+    test_loader = get_dataloader(test_dataset,
+                                 batch_size=config.batch_size,
+                                 num_workers=config.num_workers,
+                                 shuffle=config.test_shuffle,
+                                 drop_last=False,
+                                 collate_fn=test_dataset.preprocess)
+    
+    models = []
+    for model_path in os.listdir(config.save_result_path):
+        model = ClipCustomModel(config.model_name)
+        model.load_state_dict(
+            load_model(config.save_result_path, model_path)
+        )
+        models.append(model)
+    
+    predictions = ensemble_predict(models, 
+                                   test_loader, 
+                                   config.device,
+                                   config.num_classes,
+                                   inference_clip,
+                                   label_to_text=label_to_text)
+    
+    test_info['target'] = predictions
+    test_info = test_info.reset_index().rename(columns={"index": "ID"})
+    test_info.to_csv(config.output_name, index=False)
+    
+
 
 @TimeDecorator
 def test():
@@ -191,3 +236,4 @@ if __name__ == "__main__":
     # main()
     cv_main()
     # test()
+    cv_test()
