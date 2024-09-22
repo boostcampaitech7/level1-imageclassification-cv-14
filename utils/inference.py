@@ -1,7 +1,9 @@
 import os
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -51,10 +53,10 @@ def inference_clip(
                 **label_to_text
             )
             probs = outputs.logits_per_image.softmax(dim = 1)
-            preds = probs.argmax(dim=1)
+            # preds = probs.argmax(dim=1)
             
             # 예측 결과 저장
-            predictions.extend(preds.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
+            predictions.extend(probs.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
     
     return predictions
 
@@ -88,3 +90,14 @@ def inference_convnext(
 
 def load_model(path, name):
     return torch.load(os.path.join(path, name), map_location='cpu')
+
+def ensemble_predict(models, dataloader, device, inference_func, num_classes, **kwargs):
+    '''
+    soft voting 방식의 ensemble
+    '''
+    predictions = np.zeros((len(dataloader.dataset), num_classes))
+    for model in models:
+        probs = inference_func(model, device, dataloader, **kwargs)
+        predictions += probs
+
+    return predictions / len(models)
