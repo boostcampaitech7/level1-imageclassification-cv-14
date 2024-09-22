@@ -137,7 +137,7 @@ class CLIPTrainer:
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
-    @TimeDecorator
+    @TimeDecorator()
     def train(self, fold = None) -> None:
         # 전체 훈련 과정을 관리
         for epoch in range(self.epochs):

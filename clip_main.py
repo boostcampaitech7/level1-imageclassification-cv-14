@@ -18,7 +18,7 @@ from utils.inference import inference_clip, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
-@TimeDecorator
+@TimeDecorator()
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
@@ -85,7 +85,7 @@ def main():
 
     trainer.train()
 
-@TimeDecorator
+@TimeDecorator()
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
 
@@ -160,7 +160,7 @@ def cv_main():
         gc.collect()
 
 
-@TimeDecorator
+@TimeDecorator()
 def cv_test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
@@ -199,7 +199,7 @@ def cv_test():
     
 
 
-@TimeDecorator
+@TimeDecorator()
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 

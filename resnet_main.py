@@ -14,7 +14,7 @@ from trainers.resnet_trainer import ResTrainer
 from utils.inference import inference, load_model
 from utils.TimeDecorator import TimeDecorator
 
-@TimeDecorator
+@TimeDecorator()
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
 
@@ -76,7 +76,7 @@ def main():
 
     trainer.train()
 
-@TimeDecorator
+@TimeDecorator()
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
