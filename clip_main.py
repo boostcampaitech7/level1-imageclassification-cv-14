@@ -111,13 +111,13 @@ def cv_main():
                                       batch_size=config.batch_size,
                                       num_workers=config.num_workers,
                                       shuffle=config.train_shuffle,
-                                      collate_fn=train_dataset.preprocess)
+                                      collate_fn=total_dataset.preprocess)
         
         val_loader = get_dataloader(val_dataset,
                                     batch_size=config.batch_size,
                                     num_workers=config.num_workers,
                                     shuffle=config.val_shuffle,
-                                    collate_fn=val_dataset.preprocess)
+                                    collate_fn=total_dataset.preprocess)
         
         model = ClipCustomModel(config.model_name)
 
