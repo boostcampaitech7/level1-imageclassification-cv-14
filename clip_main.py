@@ -151,7 +151,7 @@ def cv_main():
             label_to_text= label_to_text
         )
 
-        trainer.train()
+        trainer.train(fold=fold + 1)
         print(f"Finished Fold {fold + 1}")
 
         # fold 끝난 후 메모리 정리
