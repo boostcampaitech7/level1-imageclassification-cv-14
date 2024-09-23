@@ -1,4 +1,4 @@
-from transformers import AutoImageProcessor
+from transformers import ViTImageProcessor
 from torchvision import transforms
 import random
 from PIL import Image
@@ -6,7 +6,7 @@ import numpy as np
 
 class ViTAutoImageTransform:
     def __init__(self, is_train=True):
-        self.processor = AutoImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
+        self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k', use_fast = True)
         self.is_train = is_train
         
         if self.is_train:

@@ -45,19 +45,10 @@ def main():
 
     model.to(config.device)
 
-    # 분류기 헤드와 다른 파라미터를 분리합니다
-    # classifier_params = model.vit.head.parameters()
-    # other_params = [p for n, p in model.named_parameters()
-    #                 if not n.startswith('vit.head')]
-
-    # # 옵티마이저를 설정합니다. 분류기 헤드에만 weight decay를 적용합니다
-    # optimizer = optim.Adam([
-    #     {'params': classifier_params, 'weight_decay': 0.001},
-    #     {'params': other_params, 'weight_decay': 0}
-    # ], lr=config.lr)
     optimizer = optim.Adam(
         model.parameters(),
-        lr=config.lr
+        lr=config.lr,
+        weight_decay=1e-4
     )
 
     scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
