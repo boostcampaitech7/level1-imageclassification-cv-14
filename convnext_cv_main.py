@@ -49,7 +49,7 @@ def main():
         optimizer=optimizer,
         scheduler=None,
         loss_fn=loss_fn,
-        epochs=1,
+        epochs=10,
         result_path=config.save_result_path,
         n_splits=5  # K-Fold의 K 값, 예를 들어 5로 설정
         )
