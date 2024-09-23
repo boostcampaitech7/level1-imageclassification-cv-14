@@ -12,7 +12,7 @@ class Convnext_Model(nn.Module):
         num_classes: int, 
         pretrained: bool,
         fine_tune_layers_num: int = 3,  # 학습할 마지막 N개의 블록
-        dropout_rate = 0.2,
+        dropout_rate = 0.3,
         **kwargs
     ):
         super(Convnext_Model, self).__init__()
@@ -41,7 +41,7 @@ class Convnext_Model(nn.Module):
         for layer in list(self.model.children())[-fine_tune_layers_num:]:
             for param in layer.parameters():
                 param.requires_grad = True
-
+                
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model.forward_features(x)  # 특징 추출
         x = self.gap(x)  # Global Average Pooling 적용
