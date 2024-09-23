@@ -139,11 +139,11 @@ def cv_main():
 
         scheduler = CosineAnnealingWarmUpRestarts(
             optimizer,
-            T_0=2,
+            T_0=len(train_loader),
             T_mult=1,
-            eta_max=0.001,
-            T_up=1,
-            gamma=0.9
+            eta_max=0.1,
+            T_up=len(train_loader) // 10,
+            gamma=0.5
         )
 
         loss_fn = CLIPLoss()

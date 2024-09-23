@@ -100,7 +100,7 @@ class CLIPTrainer:
             self.scaler.step(self.optimizer)
             self.scaler.update()
 
-            # self.scheduler.step()
+            self.scheduler.step()
             
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
@@ -149,4 +149,4 @@ class CLIPTrainer:
             print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
             self.save_model(epoch, val_loss, fold)
-            self.scheduler.step(epoch)
+            # self.scheduler.step(epoch)
