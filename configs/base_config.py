@@ -27,7 +27,7 @@ class BaseConfig:
         self.epochs = 10
 
         # 스케줄러 초기화
-        self.scheduler_gamma = 0.5  # 학습률을 현재의 10%로 감소
+        self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소
 
         # 2 epoch마다 학습률을 감소시키는 스케줄러 선언
         self.epochs_per_lr_decay = 5

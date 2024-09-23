@@ -3,12 +3,15 @@ import torch.optim as optim
 
 from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
-from transforms.albumentations_transform import AlbumentationsTransform
+# from transforms.albumentations_transform import AlbumentationsTransform
+from transformers import AutoFeatureExtractor
 from dataset.dataset import CustomDataset
+from models.CvT import CvTModel, EnhancedCvTModel
 from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.base_trainer import Trainer
 from utils.inference import inference, load_model
+from transforms.CvT_transform import CvTAutoFeatureExtractor
 
 
 def main():
@@ -16,8 +19,8 @@ def main():
 
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
 
-    train_transform = AlbumentationsTransform(is_train=True)
-    val_transform = AlbumentationsTransform(is_train=False)
+    train_transform = CvTAutoFeatureExtractor(is_train=True)
+    val_transform = CvTAutoFeatureExtractor(is_train=False)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   train_df,
@@ -35,7 +38,11 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
     
-    model = TimmModel("resnet18", config.num_classes, True)
+    model =     model = EnhancedCvTModel(model_name="microsoft/cvt-13", 
+                             num_classes=config.num_classes, 
+                             fine_tune_mode='partial',
+                             freeze_layers=3,
+                             dropout_rate=0.1)
 
     model.to(config.device)
 
@@ -71,7 +78,7 @@ def main():
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = AlbumentationsTransform(is_train=False)
+    test_transform = CvTAutoFeatureExtractor(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
@@ -83,7 +90,11 @@ def test():
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
     
-    model = TimmModel("resnet18", config.num_classes, False)
+    model = EnhancedCvTModel("microsoft/cvt-13", 
+                             config.num_classes, 
+                             fine_tune_mode='partial',
+                             freeze_layers=3,
+                             dropout_rate=0.1)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")
