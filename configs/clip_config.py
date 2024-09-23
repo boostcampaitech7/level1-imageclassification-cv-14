@@ -5,14 +5,14 @@ class ClipConfig:
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './clip_large_336_result'
+        self.save_result_path = './clip_base_patch_32_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
 
         # 출력 파일 명
-        self.output_name = 'clip_large_336_output.csv'
+        self.output_name = 'clip_base_patch_32_output.csv'
 
         # 데이터 분할
         self.test_size = 0.2
@@ -25,15 +25,15 @@ class ClipConfig:
         self.cv_shuffle = True
 
         # 모델이름
-        self.model_name = "openai/clip-vit-large-patch14-336"
-        self.transform_name = "openai/clip-vit-large-patch14-336"
+        self.model_name = "openai/clip-vit-base-patch32"
+        self.transform_name = "openai/clip-vit-base-patch32"
 
         # 하이퍼 파라미터
         self.batch_size = 32
         self.num_workers = 4
         
         # warm up을 위해서 0이나 0에 아주 작은 값을 사용
-        self.lr = 0  # Learning rate
+        self.lr = 1e-5  # Learning rate
         self.epochs = 5
         self.n_splits = 5
 

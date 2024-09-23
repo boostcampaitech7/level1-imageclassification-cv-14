@@ -47,11 +47,11 @@ class CLIPTrainer:
 
         # 현재 에폭 모델 저장
         if fold is not None:
-            current_model_path = os.path.join(self.result_path, f'model_fold_{fold}_epoch_{epoch}_loss_{loss:.4f}.pt')  
+            current_model_path = os.path.join(self.result_path, f'model_fold_{fold}_epoch_{epoch + 1}_loss_{loss:.4f}.pt')  
             list_len = 0
             best_model_path = f'{fold}fold_best_model.pt'
         else:  
-            current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch}_loss_{loss:.4f}.pt')
+            current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch + 1}_loss_{loss:.4f}.pt')
             list_len = 3
             best_model_path = 'best_model.pt'
 
@@ -72,9 +72,9 @@ class CLIPTrainer:
             best_model_path = os.path.join(self.result_path, best_model_path)
             torch.save(self.model.state_dict(), best_model_path)
             if fold is not None:
-                print(f"Save {fold}fold {epoch}epoch result. Loss = {loss:.4f}")
+                print(f"Save {fold}fold {epoch + 1}epoch result. Loss = {loss:.4f}")
             else:
-                print(f"Save {epoch}epoch result. Loss = {loss:.4f}")
+                print(f"Save {epoch + 1}epoch result. Loss = {loss:.4f}")
 
     def train_epoch(self) -> float:
         # 한 에폭 동안의 훈련을 진행
