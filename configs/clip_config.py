@@ -5,14 +5,14 @@ class ClipConfig:
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './clip_base_patch_32_result'
+        self.save_result_path = './clip_large_336_gm0.5_decay1_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
 
         # 출력 파일 명
-        self.output_name = 'clip_base_patch_32_output.csv'
+        self.output_name = 'clip_large_336_gm0.5_decay1_output.csv'
 
         # 데이터 분할
         self.test_size = 0.2
@@ -25,12 +25,12 @@ class ClipConfig:
         self.cv_shuffle = True
 
         # 모델이름
-        self.model_name = "openai/clip-vit-base-patch32"
-        self.transform_name = "openai/clip-vit-base-patch32"
+        self.model_name = "openai/clip-vit-large-patch14-336"
+        self.transform_name = "openai/clip-vit-large-patch14-336"
 
         # 하이퍼 파라미터
         self.batch_size = 32
-        self.num_workers = 4
+        self.num_workers = 2
         
         # warm up을 위해서 0이나 0에 아주 작은 값을 사용
         self.lr = 1e-5  # Learning rate
@@ -38,10 +38,10 @@ class ClipConfig:
         self.n_splits = 5
 
         # 스케줄러 초기화
-        self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소
+        self.scheduler_gamma = 0.5  # 학습률을 현재의 10%로 감소
 
         # 2 epoch마다 학습률을 감소시키는 스케줄러 선언
-        self.epochs_per_lr_decay = 2
+        self.epochs_per_lr_decay = 1
 
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
