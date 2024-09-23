@@ -5,14 +5,14 @@ class ClipConfig:
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './clip_cosineScheduler_result'
+        self.save_result_path = './clip_large_336_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
 
         # 출력 파일 명
-        self.output_name = 'clip_cosineScheduler_output.csv'
+        self.output_name = 'clip_large_336_output.csv'
 
         # 데이터 분할
         self.test_size = 0.2
@@ -25,8 +25,8 @@ class ClipConfig:
         self.cv_shuffle = True
 
         # 모델이름
-        self.model_name = "openai/clip-vit-large-patch14"
-        self.transform_name = "openai/clip-vit-large-patch14"
+        self.model_name = "openai/clip-vit-large-patch14-336"
+        self.transform_name = "openai/clip-vit-large-patch14-336"
 
         # 하이퍼 파라미터
         self.batch_size = 32
