@@ -17,6 +17,7 @@ from trainers.clip_trainer import CLIPTrainer
 from utils.inference import inference_clip, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
+from utils.cosineAnnealingWarmUpRestarts import CosineAnnealingWarmUpRestarts
 
 @TimeDecorator()
 def main():
@@ -128,12 +129,21 @@ def cv_main():
             lr=config.lr
         )
 
-        scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
+        # scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
 
-        scheduler = optim.lr_scheduler.StepLR(
+        # scheduler = optim.lr_scheduler.StepLR(
+        #     optimizer,
+        #     step_size=scheduler_step_size,
+        #     gamma=config.scheduler_gamma
+        # )
+
+        scheduler = CosineAnnealingWarmUpRestarts(
             optimizer,
-            step_size=scheduler_step_size,
-            gamma=config.scheduler_gamma
+            T_0=2,
+            T_mult=1,
+            eta_max=0.001,
+            T_up=1,
+            gamma=0.9
         )
 
         loss_fn = CLIPLoss()
