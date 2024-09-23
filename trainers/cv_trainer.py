@@ -124,6 +124,7 @@ class Trainer:
                     best_loss = val_loss
                     best_model_path = model_path  # 최적 모델 경로 저장
                     self.save_model(model_path)
+                    print(f"Best model for Fold {fold + 1} saved at {best_model_path}: Loss: {val_loss:.4f}")
 
                 # 학습률 스케줄러 업데이트
                 self.scheduler.step(val_loss)
