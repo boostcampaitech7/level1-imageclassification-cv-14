@@ -126,7 +126,7 @@ class Trainer:
                     self.save_model(model_path)
 
                 # 학습률 스케줄러 업데이트
-                self.scheduler.step()
+                self.scheduler.step(val_loss)
 
             # 최적의 모델 경로를 Fold별로 저장
             if best_model_path:
