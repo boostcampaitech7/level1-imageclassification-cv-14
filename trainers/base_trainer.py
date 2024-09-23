@@ -89,7 +89,7 @@ class Trainer:
             for images, targets in progress_bar:
                 images, targets = images.to(self.device), targets.to(self.device)
                 outputs = self.model(images)    
-                loss = self.loss_fn(outputs, targets) + self.model.get_l2_regularization()
+                loss = self.loss_fn(outputs, targets)
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
         

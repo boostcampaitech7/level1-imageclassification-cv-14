@@ -41,14 +41,13 @@ def main():
                                 num_workers = config.num_workers,
                                 shuffle=config.val_shuffle)
 
-    model = ViTModel('google/vit-base-patch16-224-in21k', config.num_classes)
+    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
 
     model.to(config.device)
 
     optimizer = optim.Adam(
         model.parameters(),
-        lr=config.lr,
-        weight_decay=1e-4
+        lr=config.lr
     )
 
     scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
@@ -94,7 +93,7 @@ def test():
                                  num_workers = config.num_workers,
                                  drop_last=False)
 
-    model = ViTModel('google/vit-base-patch16-224-in21k', config.num_classes)
+    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")
