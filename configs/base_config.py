@@ -28,7 +28,7 @@ class BaseConfig:
         self.batch_size = 32
         self.num_workers = 4
         self.lr = 1e-3  # Learning rate
-        self.epochs = 5
+        self.epochs = 10
         self.n_splits = 5
 
         # 스케줄러 초기화

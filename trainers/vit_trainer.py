@@ -84,31 +84,6 @@ class ViTTrainer:
 
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
-        # for batch in progress_bar:
-        #     self.optimizer.zero_grad()
-        #     inputs = {k: v.to(self.device) for k, v in batch.items()}
-
-        #     with autocast(device_type=self.device):
-        #         outputs = self.model(**inputs)
-        #         loss = self.loss_fn(outputs.logits_per_image,
-        #                             outputs.logits_per_text,
-        #                             self.device)
-
-        #     self.scaler.scale(loss).backward()
-        #     self.scaler.step(self.optimizer)
-        #     self.scaler.update()
-
-        #     self.scheduler.step()
-            
-        #     total_loss += loss.item()
-        #     progress_bar.set_postfix(loss=loss.item())
-
-        #     pred = torch.max(outputs.logits_per_image, 1)[1].cpu()
-        #     correct_pred += (pred == torch.arange(len(pred))).sum().item()
-        #     total_pred += len(pred)
-        
-        # return total_loss / len(self.train_loader), correct_pred / total_pred * 100
-        
         for images, targets in progress_bar:
             self.optimizer.zero_grad()
             images, targets = images.to(self.device), targets.to(self.device)
@@ -127,7 +102,8 @@ class ViTTrainer:
             progress_bar.set_postfix(loss=loss.item())
 
             pred = torch.argmax(outputs, dim=1).cpu()
-            correct_pred += (pred == torch.arange(len(pred))).sum().item()
+            targets = targets.cpu()
+            correct_pred += (pred == targets).sum().item()
             total_pred += len(pred)
         
         return total_loss / len(self.train_loader), correct_pred / total_pred * 100
@@ -151,7 +127,8 @@ class ViTTrainer:
                 progress_bar.set_postfix(loss=loss.item())
 
                 pred = torch.argmax(outputs, dim=1).cpu()
-                correct_pred += (pred == torch.arange(len(pred))).sum().item()
+                targets = targets.cpu()
+                correct_pred += (pred == targets).sum().item()
                 total_pred += len(pred)
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100

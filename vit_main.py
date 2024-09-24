@@ -17,7 +17,6 @@ from utils.inference import inference_vit, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
-@TimeDecorator
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
     train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
@@ -45,14 +44,15 @@ def main():
                                 shuffle=config.val_shuffle,
                                 )
     
-    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
+    model = ViTModel('google/vit-large-patch16-384', config.num_classes)
 
 
     model.to(config.device)
 
     optimizer = optim.Adam(
         model.parameters(),
-        lr=config.lr
+        lr=config.lr,
+        weight_decay=0.1
     )
 
     scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
@@ -110,7 +110,7 @@ def cv_main():
                                     shuffle=config.val_shuffle,
                                     )
         
-        model = ViTModel('google/vit-base-patch16-224', config.num_classes)
+        model = ViTModel('google/vit-large-patch16-384', config.num_classes)
 
         model.to(config.device)
 
@@ -170,7 +170,7 @@ def cv_test():
     models = []
     for model_path in os.listdir(config.save_result_path):
         print("model path : ", model_path)
-        model = ViTModel('google/vit-base-patch16-224', config.num_classes)
+        model = ViTModel('google/vit-large-patch16-384', config.num_classes)
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
         )
@@ -195,18 +195,18 @@ def test():
     test_transform = ViTAutoImageTransform()
 
     test_dataset = CustomDataset(config.test_data_dir_path,
-                                  test_info,
-                                  test_transform,
-                                  is_inference=True)
+                                    test_info,
+                                    test_transform,
+                                    is_inference=True)
     
     test_loader = get_dataloader(test_dataset,
-                                 batch_size=config.batch_size,
-                                 num_workers=config.num_workers,
-                                 shuffle=config.test_shuffle,
-                                 drop_last=False,
-                                 )
+                                    batch_size=config.batch_size,
+                                    num_workers=config.num_workers,
+                                    shuffle=config.test_shuffle,
+                                    drop_last=False,
+                                )
     
-    model = ViTModel('google/vit-base-patch16-224', config.num_classes)
+    model = ViTModel('google/vit-large-patch16-384', config.num_classes)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")
