@@ -34,7 +34,7 @@ class EnhancedCvTModel(nn.Module):
         self, 
         model_name: str,
         num_classes: int,
-        fine_tune_mode: str = 'full',
+        fine_tune_mode: str = 'last_layer',
         freeze_layers: int = 0,
         dropout_rate: float = 0.1
     ):
@@ -49,8 +49,10 @@ class EnhancedCvTModel(nn.Module):
         # classifier를 새로 정의 (dropout 포함)
         in_features = self.model.classifier.in_features
         self.model.classifier = nn.Sequential(
+            self.model.classifier,
+            nn.ReLU(),
             self.dropout,
-            nn.Linear(in_features, num_classes)
+            nn.Linear(500, num_classes)
         )
         
         # Fine-tuning 모드 설정

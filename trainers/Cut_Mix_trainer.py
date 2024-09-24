@@ -6,6 +6,8 @@ import torch.optim as optim
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
+from utils.Cut_mix import rand_bbox
+import numpy as np
 
 class Trainer:
     def __init__(
@@ -59,6 +61,8 @@ class Trainer:
     def train_epoch(self) -> float:
         # 한 에폭 동안의 훈련을 진행
         self.model.train()
+        beta = 1.0
+        cutmix_prob = 0.5
         
         total_loss = 0.0
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
@@ -66,10 +70,25 @@ class Trainer:
         for images, targets in progress_bar:
             images, targets = images.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
-            outputs = self.model(images)
-            loss = self.loss_fn(outputs, targets)
-            pt = torch.exp(-loss)
-            loss = (1-pt)**2 * loss
+            r = np.random.rand(1)
+            if beta > 0 and r < cutmix_prob:
+                # generate mixed sample
+                lam = np.random.beta(beta, beta)
+                rand_index = torch.randperm(images.size()[0]).cuda()
+                target_a = targets
+                target_b = targets[rand_index]
+                bbx1, bby1, bbx2, bby2 = rand_bbox(images.size(), lam)
+                images[:, :, bbx1:bbx2, bby1:bby2] = images[rand_index, :, bbx1:bbx2, bby1:bby2]
+                # adjust lambda to exactly match pixel ratio
+                lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (images.size()[-1] * images.size()[-2]))
+                # compute output
+                outputs = self.model(images)
+                loss = self.loss_fn(outputs, target_a) * lam + self.loss_fn(outputs, target_b) * (1. - lam)
+            else:
+                outputs = self.model(images)
+                loss = self.loss_fn(outputs, targets)
+
+
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
