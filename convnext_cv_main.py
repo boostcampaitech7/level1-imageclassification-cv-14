@@ -17,12 +17,10 @@ from losses.Focal_Loss import FocalLoss
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
 
-    train_df, val_df = data_split(train_info, config.test_size, train_info['target'])
-
     train_transform = SketchTransform(is_train=True)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
-                                  train_df,
+                                  train_info,
                                   train_transform)
     
     model = Convnext_Model(model_name = "convnext_large_mlp.clip_laion2b_soup_ft_in12k_in1k_320", num_classes = 500, pretrained = True)
@@ -40,7 +38,7 @@ def main():
         model=model,
         device=config.device,
         train_dataset=train_dataset,  # 전체 학습 데이터셋
-        val_dataset=train_dataset,  # 검증용으로도 동일한 전체 학습 데이터셋 사용
+        val_dataset=None,  # 검증용으로도 동일한 전체 학습 데이터셋 사용
         optimizer=optimizer,
         scheduler=1,
         loss_fn=loss_fn,

@@ -64,7 +64,7 @@ class Trainer:
             train_subset = CustomDataset(self.train_dataset.root_dir,
                                         info_df.iloc[train_idx].reset_index(drop=True),
                                         transform=train_transform)  # 훈련용 Transform 적용
-            val_subset = CustomDataset(self.val_dataset.root_dir, 
+            val_subset = CustomDataset(self.train_dataset.root_dir, 
                                     info_df.iloc[val_idx].reset_index(drop=True),
                                     transform=val_transform)  # 검증용 Transform 적용
 
