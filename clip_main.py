@@ -129,22 +129,22 @@ def cv_main():
             lr=config.lr
         )
 
-        scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
+        # scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
 
-        scheduler = optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=scheduler_step_size,
-            gamma=config.scheduler_gamma
-        )
-
-        # scheduler = CosineAnnealingWarmUpRestarts(
+        # scheduler = optim.lr_scheduler.StepLR(
         #     optimizer,
-        #     T_0=len(train_loader),
-        #     T_mult=1,
-        #     eta_max=0.1,
-        #     T_up=len(train_loader) // 10,
-        #     gamma=0.5
+        #     step_size=scheduler_step_size,
+        #     gamma=config.scheduler_gamma
         # )
+
+        scheduler = CosineAnnealingWarmUpRestarts(
+            optimizer,
+            T_0=len(train_loader),
+            T_mult=1,
+            eta_max=0.001,
+            T_up=len(train_loader) // 10,
+            gamma=0.5
+        )
 
         loss_fn = CLIPLoss()
 
