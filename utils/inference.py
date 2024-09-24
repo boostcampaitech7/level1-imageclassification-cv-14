@@ -27,10 +27,10 @@ def inference(
             # 모델을 통해 예측 수행
             logits = model(images)
             logits = F.softmax(logits, dim=1)
-            preds = logits.argmax(dim=1)
+            # preds = logits.argmax(dim=1)
             
             # 예측 결과 저장
-            predictions.extend(preds.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
+            predictions.extend(logits.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
     
     return predictions
 

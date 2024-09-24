@@ -10,7 +10,7 @@ from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 from utils.TimeDecorator import TimeDecorator
 
-class CLIPTrainer:
+class EfficientNetTrainer:
     def __init__(
         self, 
         model: nn.Module, 

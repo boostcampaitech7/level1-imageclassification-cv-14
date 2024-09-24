@@ -13,19 +13,17 @@ from transforms.efficientnet_transform import EfficientNetTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from trainers.efficient_trainer import EfficientNetTrainer
 from utils.inference import inference, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
-from utils.cosineAnnealingWarmUpRestarts import CosineAnnealingWarmUpRestarts
 
 
 @TimeDecorator()
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
 
-    total_transform = EfficientNetTransform(transform_name=config.transform_name,
-                                            is_train=True)
+    total_transform = EfficientNetTransform(is_train=True)
 
     total_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
@@ -51,8 +49,8 @@ def cv_main():
                                     shuffle=config.val_shuffle)
         
         model = TimmModel(config.model_name,
-                          pretrained=True,
-                          num_classes=config.num_classes)
+                          num_classes=config.num_classes,
+                          pretrained=True)
 
         model.to(config.device)
 
@@ -71,7 +69,7 @@ def cv_main():
 
         loss_fn = CrossEntropyLoss()
 
-        trainer = Trainer(
+        trainer = EfficientNetTrainer(
             model=model,
             device=config.device,
             train_loader=train_loader,
@@ -96,9 +94,9 @@ def cv_main():
 def cv_test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = ClipProcessor(config.model_name)
+    test_transform = EfficientNetTransform(is_train=False)
 
-    test_dataset = ClipCustomDataset(config.test_data_dir_path,
+    test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
                                   test_transform,
                                   is_inference=True)
@@ -107,65 +105,30 @@ def cv_test():
                                  batch_size=config.batch_size,
                                  num_workers=config.num_workers,
                                  shuffle=config.test_shuffle,
-                                 drop_last=False,
-                                 collate_fn=test_dataset.preprocess)
+                                 drop_last=False)
     
     models = []
     for model_path in os.listdir(config.save_result_path):
-        model = ClipCustomModel(config.model_name)
+        model = TimmModel(config.model_name,
+                          num_classes=config.num_classes,
+                          pretrained=False)
+        
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
         )
+
         models.append(model)
     
     predictions = ensemble_predict(models, 
                                    test_loader, 
                                    config.device,
                                    config.num_classes,
-                                   inference_clip,
-                                   label_to_text=label_to_text)
+                                   inference)
     
-    test_info['target'] = predictions
-    test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv(config.output_name, index=False)
-    
-
-
-@TimeDecorator()
-def test():
-    test_info = pd.read_csv(config.test_data_info_file_path)
-
-    test_transform = ClipProcessor(config.model_name)
-
-    test_dataset = ClipCustomDataset(config.test_data_dir_path,
-                                  test_info,
-                                  test_transform,
-                                  is_inference=True)
-    
-    test_loader = get_dataloader(test_dataset,
-                                 batch_size=config.batch_size,
-                                 num_workers=config.num_workers,
-                                 shuffle=config.test_shuffle,
-                                 drop_last=False,
-                                 collate_fn=test_dataset.preprocess)
-    
-    model = ClipCustomModel(config.model_name)
-
-    model.load_state_dict(
-        load_model(config.save_result_path, "best_model.pt")
-    )
-
-    predictions = inference_clip(model, 
-                            config.device, 
-                            test_loader,
-                            label_to_text)
-
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
     test_info.to_csv(config.output_name, index=False)
 
 if __name__ == "__main__":
-    # main()
     cv_main()
-    # test()
     cv_test()
