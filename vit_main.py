@@ -116,7 +116,8 @@ def cv_main():
 
         optimizer = optim.Adam(
             model.parameters(),
-            lr=config.lr
+            lr=config.lr,
+            weight_decay=1e-4
         )
 
         scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
@@ -223,6 +224,6 @@ def test():
 
 if __name__ == "__main__":
     # main()
-    # cv_main()
+    cv_main()
     # test()
     cv_test()

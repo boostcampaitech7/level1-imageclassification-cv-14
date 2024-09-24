@@ -25,10 +25,10 @@ class BaseConfig:
         self.cv_shuffle = True
 
         # 하이퍼 파라미터
-        self.batch_size = 32
+        self.batch_size = 64
         self.num_workers = 4
         self.lr = 1e-3  # Learning rate
-        self.epochs = 10
+        self.epochs = 6
         self.n_splits = 5
 
         # 스케줄러 초기화
