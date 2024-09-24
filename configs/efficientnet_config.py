@@ -32,13 +32,12 @@ class EfficientNetConfig:
         self.batch_size = 32
         self.num_workers = 4
         
-        # warm up을 위해서 0이나 0에 아주 작은 값을 사용
-        self.lr = 1e-5  # Learning rate
+        self.lr = 1e-4  # Learning rate
         self.epochs = 5
         self.n_splits = 5
 
         # 스케줄러 초기화
-        self.scheduler_gamma = 0.5  # 학습률을 현재의 10%로 감소
+        self.scheduler_gamma = 0.5 
 
         # 2 epoch마다 학습률을 감소시키는 스케줄러 선언
         self.epochs_per_lr_decay = 1
