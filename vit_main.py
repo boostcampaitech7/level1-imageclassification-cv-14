@@ -82,7 +82,7 @@ def main():
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
 
-    total_transform = ViTAutoImageTransform()
+    total_transform = ViTAutoImageTransform(is_train=True)
 
     total_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
@@ -154,7 +154,7 @@ def cv_main():
 def cv_test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = ViTAutoImageTransform()
+    test_transform = ViTAutoImageTransform(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
