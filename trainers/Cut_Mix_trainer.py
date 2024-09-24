@@ -7,7 +7,9 @@ import torch.optim as optim
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
 from utils.Cut_mix import rand_bbox
+from utils.early_stopping import early_stopping
 import numpy as np
+early_stopping_mode = True
 
 class Trainer:
     def __init__(
@@ -121,6 +123,15 @@ class Trainer:
             
             train_loss = self.train_epoch()
             val_loss = self.validate()
+            if early_stopping_mode:
+
+                early_stopping(val_loss, self.model)
+
+                if early_stopping.early_stop:
+                    print("Early stopping")
+                    print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
+                    break
+
             print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
 
             self.save_model(epoch, val_loss)
