@@ -7,7 +7,7 @@ from utils.inference import csv_soft_voting, csv_hard_voting, csv_weighted_votin
 def main():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    input_paths = [os.path.join(config.ensemble_folder, path) for path in os.listdir(config.ensemble_folder)].sort()
+    input_paths = [os.path.join(config.ensemble_folder, path) for path in os.listdir(config.ensemble_folder)]
     preds = csv_weighted_voting(input_paths, config.num_classes)
 
     test_info['target'] = preds

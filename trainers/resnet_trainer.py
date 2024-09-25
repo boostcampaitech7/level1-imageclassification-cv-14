@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
 from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
+from utils.TimeDecorator import TimeDecorator
 
 
 class ResTrainer:
@@ -37,28 +38,40 @@ class ResTrainer:
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
         self.scaler = GradScaler()
 
-    def save_model(self, epoch, loss):
+    def save_model(self, epoch, loss, fold = None):
         # 모델 저장 경로 설정
         os.makedirs(self.result_path, exist_ok=True)
 
         # 현재 에폭 모델 저장
-        current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch}_loss_{loss:.4f}.pt')
+        if fold is not None:
+            current_model_path = os.path.join(self.result_path, f'model_fold_{fold}_epoch_{epoch + 1}_loss_{loss:.4f}.pt')  
+            list_len = 0
+            best_model_path = f'{fold}fold_best_model.pt'
+        else:  
+            current_model_path = os.path.join(self.result_path, f'model_epoch_{epoch + 1}_loss_{loss:.4f}.pt')
+            list_len = 3
+            best_model_path = 'best_model.pt'
+
         torch.save(self.model.state_dict(), current_model_path)
 
         # 최상위 3개 모델 관리
         self.best_models.append((loss, epoch, current_model_path))
         self.best_models.sort()
-        if len(self.best_models) > 3:
+        if len(self.best_models) > list_len:
             _, _, path_to_remove = self.best_models.pop(-1)  # 가장 높은 손실 모델 삭제
             if os.path.exists(path_to_remove):
                 os.remove(path_to_remove)
 
         # 가장 낮은 손실의 모델 저장
+
         if loss < self.lowest_loss:
             self.lowest_loss = loss
-            best_model_path = os.path.join(self.result_path, 'best_model.pt')
+            best_model_path = os.path.join(self.result_path, best_model_path)
             torch.save(self.model.state_dict(), best_model_path)
-            print(f"Save {epoch}epoch result. Loss = {loss:.4f}")
+            if fold is not None:
+                print(f"Save {fold}fold {epoch + 1}epoch result. Loss = {loss:.4f}")
+            else:
+                print(f"Save {epoch + 1}epoch result. Loss = {loss:.4f}")
 
     def train_epoch(self) -> float:
         # 한 에폭 동안의 훈련을 진행
@@ -87,6 +100,7 @@ class ResTrainer:
 
             self.scheduler.step()
             total_loss += loss.item()
+
             _, pred = torch.max(outputs, 1)
             correct_pred += (pred == targets).sum().item()
             total_pred += targets.size(0)
@@ -119,7 +133,8 @@ class ResTrainer:
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 
-    def train(self) -> None:
+    @TimeDecorator()
+    def train(self, fold = None) -> None:
         # 전체 훈련 과정을 관리
         for epoch in range(self.epochs):
             print(f"Epoch {epoch+1}/{self.epochs}")
@@ -129,5 +144,5 @@ class ResTrainer:
             print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
             print(f"Epoch {epoch + 1}, Train Acc: {train_acc:.4f}, Validation Acc: {val_acc:.4f}")
 
-            self.save_model(epoch, val_loss)
+            self.save_model(epoch, val_loss, fold)
             self.scheduler.step()

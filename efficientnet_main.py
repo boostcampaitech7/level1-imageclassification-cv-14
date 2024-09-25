@@ -22,28 +22,34 @@ from sklearn.model_selection import StratifiedKFold
 @TimeDecorator()
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
+    
+    train_transform = EfficientNetTransform(is_train=True)
+    val_transform = EfficientNetTransform(is_train=False)
 
-    total_transform = EfficientNetTransform(is_train=True)
-
-    total_dataset = CustomDataset(config.train_data_dir_path,
+    train_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
-                                  total_transform,
+                                  train_transform,
                                   is_inference = False)
+    
+    val_dataset = CustomDataset(config.train_data_dir_path,
+                                data_info,
+                                val_transform,
+                                is_inference=False)
 
     skf = StratifiedKFold(n_splits=config.n_splits, shuffle=config.cv_shuffle)
 
-    for fold, (train_idx, val_idx) in enumerate(skf.split(total_dataset, total_dataset.targets)):
+    for fold, (train_idx, val_idx) in enumerate(skf.split(train_dataset, train_dataset.targets)):
         print(f"Fold {fold+1}/{config.n_splits}")
 
-        train_dataset = get_subset(total_dataset, train_idx)
-        val_dataset = get_subset(total_dataset, val_idx)
+        train_subset_dataset = get_subset(train_dataset, train_idx)
+        val_subset_dataset = get_subset(val_dataset, val_idx)
 
-        train_loader = get_dataloader(train_dataset,
+        train_loader = get_dataloader(train_subset_dataset,
                                       batch_size=config.batch_size,
                                       num_workers=config.num_workers,
                                       shuffle=config.train_shuffle)
         
-        val_loader = get_dataloader(val_dataset,
+        val_loader = get_dataloader(val_subset_dataset,
                                     batch_size=config.batch_size,
                                     num_workers=config.num_workers,
                                     shuffle=config.val_shuffle)
