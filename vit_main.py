@@ -13,7 +13,7 @@ from models.ViT import ViTModel
 from transforms.vit_transform import ViTAutoImageTransform
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.vit_trainer import ViTTrainer
-from utils.inference import inference_vit, load_model, ensemble_predict
+from utils.inference import inference_vit, load_model, ensemble_predict, extract_probs, save_probs
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
@@ -171,29 +171,28 @@ def cv_test():
     models = []
     for model_path in os.listdir(config.save_result_path):
         print("model path : ", model_path)
-        model = ViTModel('google/vit-large-patch16-384', config.num_classes)
+        model = ViTModel('google/vit-base-patch16-384', config.num_classes)
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
         )
         models.append(model)
     
-    predictions = ensemble_predict(models, 
+    predictions = extract_probs(models, 
                                    test_loader, 
                                    config.device,
                                    config.num_classes,
                                    inference_vit,
                                    )
     
-    test_info['target'] = predictions
-    test_info = test_info.reset_index().rename(columns={"index": "ID"})
+    test_info = save_probs(test_info, predictions)
+    # test_info = test_info.reset_index().rename(columns={"index": "ID"})
     test_info.to_csv(config.output_name, index=False)
-    
 
 
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = ViTAutoImageTransform()
+    test_transform = ViTAutoImageTransform(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                     test_info,
@@ -226,4 +225,4 @@ if __name__ == "__main__":
     # main()
     cv_main()
     # test()
-    cv_test()
+    # cv_test()

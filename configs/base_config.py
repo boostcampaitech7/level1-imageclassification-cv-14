@@ -12,7 +12,7 @@ class BaseConfig:
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
         
-        self.output_name = 'vit_output.csv'
+        self.output_name = 'vit_probs_output.csv'
         
         # 데이터 분할
         self.test_size = 0.2
