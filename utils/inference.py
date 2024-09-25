@@ -5,7 +5,7 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 
-
+from scipy.stats import mode
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
@@ -128,11 +128,16 @@ def save_probs(df, pred):
     return new_df
     
 def csv_soft_voting(inputs, num_classes):
-    probs_list = [pd.read_csv(path) for path in inputs]
-    total_probs = np.zeros(probs_list[0].shape[0], num_classes)
+    probs_list = [pd.read_csv(path).iloc[:, 1:] for path in inputs]
+    total_probs = np.zeros((probs_list[0].shape[0], num_classes))
 
     for df in probs_list:
-        total_probs += df.iloc[:, 1:]
+        total_probs += df
     total_probs /= len(probs_list)
-    return total_probs.argmax(axis=1)
+    return total_probs.to_numpy().argmax(axis=1)
 
+def csv_hard_voting(inputs):
+    target_list = [pd.read_csv(path).iloc[:, 1:].to_numpy().argmax(axis=1) for path in inputs]
+    total_target = np.stack(target_list, axis=1)
+
+    return mode(total_target, axis=1)[0]

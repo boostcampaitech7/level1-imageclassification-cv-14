@@ -7,7 +7,7 @@ from utils.inference import csv_soft_voting
 def main():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    input_paths = os.listdir("./ensemble_probs")
+    input_paths = ["./ensemble_probs/" + path for path in os.listdir("./ensemble_probs")]
 
     preds = csv_soft_voting(input_paths, config.num_classes)
 
