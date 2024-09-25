@@ -1,5 +1,6 @@
 import torch
 import pandas as pd
+import numpy as np
 
 
 from configs.clip_config import config
@@ -50,6 +51,8 @@ def main():
                                 config.device, 
                                 test_loader,
                                 label_to_text)
+    
+    predictions = np.array(predictions)
 
     # test_info['target'] = predictions
     test_info = save_probs(test_info, predictions)
