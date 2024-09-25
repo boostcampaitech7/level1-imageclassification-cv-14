@@ -5,7 +5,7 @@ class ResNetConfig:
         # 학습 경로
         self.train_data_dir_path = './data/train'
         self.train_data_info_file_path = './data/train.csv'
-        self.save_result_path = './resnet152_cv_result'
+        self.save_result_path = './resnet_folder/resnet152_cv_result'
 
         # 추론 경로
         self.test_data_dir_path = './data/test'
@@ -28,10 +28,10 @@ class ResNetConfig:
         self.model_name = "resnet152"
 
         # 하이퍼 파라미터
-        self.batch_size = 32
+        self.batch_size = 16
         self.num_workers = 4
         
-        self.lr = 0.001  # Learning rate
+        self.lr = 1e-4  # Learning rate
         self.epochs = 10
         self.n_splits = 5
 
