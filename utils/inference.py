@@ -141,3 +141,14 @@ def csv_hard_voting(inputs):
     total_target = np.stack(target_list, axis=1)
 
     return mode(total_target, axis=1)[0]
+
+def csv_weighted_voting(inputs, num_classes):
+    probs_list = [pd.read_csv(path).iloc[:, 1:] for path in inputs]
+    total_probs = np.zeros((probs_list[0].shape[0], num_classes))
+
+    inputs_dict = {k : v for k, v in zip(inputs, probs_list)}
+
+    for k in inputs_dict:
+        tmp = int(k[-5:-4])
+        total_probs += (inputs_dict[k] * tmp)
+    return total_probs.to_numpy().argmax(axis=1)

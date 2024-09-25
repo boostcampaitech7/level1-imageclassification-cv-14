@@ -35,4 +35,8 @@ class BaseConfig:
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        # ensemble
+        self.ensemble_folder = "./ensemble_probs"
+        self.ensemble_output = "first_weighted_voting.csv"
+
 config = BaseConfig()
