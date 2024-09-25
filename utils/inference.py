@@ -1,6 +1,7 @@
 import os
 import torch
 import numpy as np
+import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -120,7 +121,18 @@ def extrat_probs(models, dataloader, device, num_classes, inference_func, **kwar
     return predictions
 
 def save_probs(df, pred):
-    for i in range(pred.shape[1]):
-        df[i] = pred[:, i]
-    return df
+    label = [str(i) for i in range(pred.shape[1])]
+    probs_df = pd.DataFrame(pred, columns=label)
+    new_df = pd.concat([df, probs_df], axis=1)
+
+    return new_df
     
+def csv_soft_voting(inputs, num_classes):
+    probs_list = [pd.read_csv(path) for path in inputs]
+    total_probs = np.zeros(probs_list[0].shape[0], num_classes)
+
+    for df in probs_list:
+        total_probs += df.iloc[:, 1:]
+    total_probs /= len(probs_list)
+    return total_probs.argmax(axis=1)
+
