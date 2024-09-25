@@ -12,7 +12,7 @@ class EfficientNetConfig:
         self.test_data_info_file_path = './data/test.csv'
 
         # 출력 파일 명
-        self.output_name = './output_result/efficientnet_b5_image_processing_output.csv'
+        self.output_name = './weight_avg_folder/efficientnet_weight_avg_probs.csv'
 
         # 데이터 분할
         self.test_size = 0.2

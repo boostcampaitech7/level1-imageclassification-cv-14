@@ -3,27 +3,19 @@ import pandas as pd
 import numpy as np
 
 
-from configs.clip_config import config
+from configs.efficientnet_config import config
 from utils.data_related import get_dataloader
-from dataset.clip_dataset import ClipCustomDataset
-from models.clip_model import ClipCustomModel
-from utils.inference import inference_clip, save_probs
+from transforms.efficientnet_transform import EfficientNetTransform
+from dataset.dataset import CustomDataset
+from models.base_timm_model import TimmModel
+from utils.inference import inference, save_probs
 from transforms.clip_transform import ClipProcessor
 from utils.model_soup import get_model, model_load
 
 def main():
-    data_info = pd.read_csv(config.train_data_info_file_path)
-
-    total_transform = ClipProcessor(transform_name=config.transform_name)
-
-    total_dataset = ClipCustomDataset(config.train_data_dir_path,
-                                  data_info,
-                                  total_transform,
-                                  is_inference = False)
-    
-    label_to_text = {k: torch.tensor(v, device=config.device) for k, v in total_dataset.label_to_text_res.items()}
-
-    model = ClipCustomModel(config.model_name)
+    model = TimmModel(config.model_name,
+                      config.num_classes,
+                      False)
 
     state_dicts = model_load(config.device, config.save_result_path)
     model = get_model(state_dicts, 1 / len(state_dicts), model)
@@ -32,9 +24,9 @@ def main():
 
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = ClipProcessor(config.model_name)
+    test_transform = EfficientNetTransform(is_train=False)
 
-    test_dataset = ClipCustomDataset(config.test_data_dir_path,
+    test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
                                   test_transform,
                                   is_inference=True)
@@ -43,14 +35,12 @@ def main():
                                  batch_size=config.batch_size,
                                  num_workers=config.num_workers,
                                  shuffle=config.test_shuffle,
-                                 drop_last=False,
-                                 collate_fn=test_dataset.preprocess)
+                                 drop_last=False)
     
     
-    predictions = inference_clip(model, 
+    predictions = inference(model, 
                                 config.device, 
-                                test_loader,
-                                label_to_text)
+                                test_loader)
     
     predictions = np.array(predictions)
 
