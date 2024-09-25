@@ -116,8 +116,7 @@ class ViTTrainer:
             with autocast(device_type=self.device):
                 outputs = self.model(images)
                 loss = self.loss_fn(outputs, targets)
-                pt = torch.exp(-loss)
-                loss = (1-pt)**2 * loss
+                
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
