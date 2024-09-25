@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -62,3 +63,21 @@ def inference_convnext(
 
 def load_model(path, name):
     return torch.load(os.path.join(path, name), map_location='cpu')
+
+def extrat_probs(models, dataloader, device, num_classes, inference_func, **kwargs):
+    '''
+    동일한 모델의 cross validation 결과를 각 클래스별 확률로 soft voting한 결과 반환
+    '''
+    predictions = np.zeros((len(dataloader.dataset), num_classes))
+    for model in models:
+        probs = inference_func(model, device, dataloader, **kwargs)
+        predictions += probs
+
+    predictions = predictions / len(models)
+    return predictions
+
+def save_probs(df, pred):
+    for i in range(pred.shape[1]):
+        df[i] = pred[:, i]
+    return df
+    
