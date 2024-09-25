@@ -2,12 +2,13 @@ import torch
 import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+from utils.image_processing import gaussian_noise
 
 class EfficientNetTransform:
     def __init__(self, is_train: bool = True):
         # 공통 변환 설정: 이미지 리사이즈, 정규화, 텐서 변환
         common_transforms = [
-            A.Resize(456, 456),  # 이미지를 224x224 크기로 리사이즈
+            A.Resize(456, 456), 
             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # 정규화
             ToTensorV2()  # albumentations에서 제공하는 PyTorch 텐서 변환
         ]
@@ -30,7 +31,8 @@ class EfficientNetTransform:
         if not isinstance(image, np.ndarray):
             raise TypeError("Image should be a NumPy array (OpenCV format).")
         
+        transformed = gaussian_noise(image, 255, 15, 2)
         # 이미지에 변환 적용 및 결과 반환
-        transformed = self.transform(image=image)  # 이미지에 설정된 변환을 적용
+        transformed = self.transform(image=transformed)  # 이미지에 설정된 변환을 적용
         
         return transformed['image']  # 변환된 이미지의 텐서를 반환
