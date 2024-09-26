@@ -23,8 +23,8 @@ from sklearn.model_selection import StratifiedKFold
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
     
-    train_transform = DeiTProcessor(is_train=True)
-    val_transform = DeiTProcessor(is_train=False)
+    train_transform = DeiTProcessor(config.transform_name)
+    val_transform = DeiTProcessor(config.transform_name)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
@@ -92,7 +92,6 @@ def cv_main():
         del model, optimizer, scheduler, trainer
         torch.cuda.empty_cache()
         gc.collect()
-        break
 
 
 @TimeDecorator()
@@ -134,4 +133,4 @@ def cv_test():
 
 if __name__ == "__main__":
     cv_main()
-    # cv_test()
+    cv_test()

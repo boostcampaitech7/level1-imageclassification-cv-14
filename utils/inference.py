@@ -74,21 +74,21 @@ def inference_deit(
     model.to(device)
     model.eval()
     
-    # predictions = []
-    # with torch.no_grad():  # Gradient 계산을 비활성화
-    #     for batch in tqdm(test_loader):            
-    #         # 모델을 통해 예측 수행
-    #         outputs = model()
-    #         probs = outputs.logits_per_image.softmax(dim = 1)
-    #         # preds = probs.argmax(dim=1)
+    predictions = []
+    with torch.no_grad():  # Gradient 계산을 비활성화
+        for images in tqdm(test_loader):            
+            # 모델을 통해 예측 수행
+            outputs = model(pixel_values=images)
+            probs = outputs.logits.softmax(dim = 1)
+            preds = probs.argmax(dim=1)
             
-    #         # 예측 결과 저장
-    #         predictions.extend(probs.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
+            # 예측 결과 저장
+            predictions.extend(preds.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
     
-    # del model
-    # torch.cuda.empty_cache()
+    del model
+    torch.cuda.empty_cache()
     
-    # return predictions
+    return predictions
 
 # 모델 추론을 위한 함수
 def inference_convnext(

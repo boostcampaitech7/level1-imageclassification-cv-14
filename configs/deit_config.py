@@ -25,8 +25,8 @@ class DeiTConfig:
         self.cv_shuffle = True
 
         # 모델이름
-        self.model_name = "'facebook/deit-base-distilled-patch16-384'"
-        self.transform_name = "'facebook/deit-base-distilled-patch16-384'"
+        self.model_name = "facebook/deit-base-distilled-patch16-384"
+        self.transform_name = "facebook/deit-base-distilled-patch16-384"
 
         # 하이퍼 파라미터
         self.batch_size = 32

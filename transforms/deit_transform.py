@@ -7,6 +7,6 @@ class DeiTProcessor:
 
     def __call__(self, input_image):
         img = gaussian_noise(input_image, 255, 15, 2)
-        return self.processor(images=img, return_tensors="pt")
+        return self.processor(images=img, return_tensors="pt")['pixel_values'][0]
     
         

@@ -85,13 +85,12 @@ class DeiTTranier:
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
         for images, targets in progress_bar:
-            
             self.optimizer.zero_grad()
             images, targets = images.to(self.device), targets.to(self.device)
 
             with autocast(device_type=self.device):
-                outputs = self.model(images)
-                loss = self.loss_fn(outputs, targets)
+                outputs = self.model(pixel_values=images)
+                loss = self.loss_fn(outputs.logits, targets)
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -102,7 +101,7 @@ class DeiTTranier:
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
 
-            _, pred = torch.max(outputs, 1)
+            _, pred = torch.max(outputs.logits, 1)
             correct_pred += (pred == targets).sum().item()
             total_pred += targets.size(0)
         
@@ -120,14 +119,14 @@ class DeiTTranier:
         with torch.no_grad():
             for images, targets in progress_bar:
                 images, targets = images.to(self.device), targets.to(self.device)
-                outputs = self.model(images)    
+                outputs = self.model(pixel_values=images)    
 
-                loss = self.loss_fn(outputs, targets)
+                loss = self.loss_fn(outputs.logits, targets)
                 total_loss += loss.item()
 
                 progress_bar.set_postfix(loss=loss.item())
 
-                _, pred = torch.max(outputs, 1)
+                _, pred = torch.max(outputs.logits, 1)
                 correct_pred += (pred == targets).sum().item()
                 total_pred += targets.size(0)
         
