@@ -14,7 +14,7 @@ from dataset.dataset import CustomDataset
 from models.deit_model import DeitCustomModel
 from losses.cross_entropy_loss import CrossEntropyLoss
 from trainers.deit_trainer import DeiTTranier
-from utils.inference import inference, load_model, ensemble_predict
+from utils.inference import inference_deit, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
@@ -92,6 +92,7 @@ def cv_main():
         del model, optimizer, scheduler, trainer
         torch.cuda.empty_cache()
         gc.collect()
+        break
 
 
 @TimeDecorator()
@@ -125,7 +126,7 @@ def cv_test():
                                    test_loader, 
                                    config.device,
                                    config.num_classes,
-                                   inference)
+                                   inference_deit)
     
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
@@ -133,4 +134,4 @@ def cv_test():
 
 if __name__ == "__main__":
     cv_main()
-    cv_test()
+    # cv_test()

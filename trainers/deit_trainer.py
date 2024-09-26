@@ -85,6 +85,7 @@ class DeiTTranier:
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
         for images, targets in progress_bar:
+            
             self.optimizer.zero_grad()
             images, targets = images.to(self.device), targets.to(self.device)
 
