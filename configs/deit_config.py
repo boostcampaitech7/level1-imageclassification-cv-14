@@ -30,7 +30,7 @@ class DeiTConfig:
 
         # 하이퍼 파라미터
         self.batch_size = 32
-        self.num_workers = 4
+        self.num_workers = 8
         
         self.lr = 1e-4  # Learning rate
         self.epochs = 5

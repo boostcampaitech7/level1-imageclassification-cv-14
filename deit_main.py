@@ -59,7 +59,7 @@ def cv_main():
 
         model.to(config.device)
 
-        optimizer = optim.SGD(
+        optimizer = optim.Adam(
             model.parameters(),
             lr=config.lr
         )

@@ -76,14 +76,14 @@ def inference_deit(
     
     predictions = []
     with torch.no_grad():  # Gradient 계산을 비활성화
-        for images in tqdm(test_loader):            
+        for images in tqdm(test_loader):  
+            images = images.to(device)          
             # 모델을 통해 예측 수행
             outputs = model(pixel_values=images)
             probs = outputs.logits.softmax(dim = 1)
-            preds = probs.argmax(dim=1)
             
             # 예측 결과 저장
-            predictions.extend(preds.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
+            predictions.extend(probs.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가
     
     del model
     torch.cuda.empty_cache()
