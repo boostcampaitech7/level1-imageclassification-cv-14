@@ -12,7 +12,7 @@ from utils.model_read import get_model, model_load
 
 def main():
     state_dicts = model_load(config.device)
-    model = ViTModel('google/vit-base-patch16-384', config.num_classes)
+    model = ViTModel('google/vit-large-patch16-384', config.num_classes)
     alphal = [1 / len(state_dicts) for i in range(len(state_dicts))]
     model = get_model(state_dicts, alphal, model)
     model.to(config.device)

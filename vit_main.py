@@ -171,7 +171,7 @@ def cv_test():
     models = []
     for model_path in os.listdir(config.save_result_path):
         print("model path : ", model_path)
-        model = ViTModel('google/vit-base-patch16-384', config.num_classes)
+        model = ViTModel('google/vit-large-patch16-384', config.num_classes)
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
         )
@@ -223,6 +223,6 @@ def test():
 
 if __name__ == "__main__":
     # main()
-    cv_main()
+    # cv_main()
     # test()
-    # cv_test()
+    cv_test()

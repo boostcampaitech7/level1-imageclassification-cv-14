@@ -3,9 +3,6 @@ import torch.nn as nn
 import torch
 
 class ViTModel(nn.Module):
-    """
-    Test용 ViTModel
-    """
     def __init__(
         self, 
         model_name: str,
