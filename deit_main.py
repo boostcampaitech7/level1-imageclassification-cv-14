@@ -54,7 +54,8 @@ def cv_main():
                                     num_workers=config.num_workers,
                                     shuffle=config.val_shuffle)
         
-        model = DeitCustomModel(config.model_name)
+        model = DeitCustomModel(config.model_name,
+                                num_labels=config.num_classes)
 
         model.to(config.device)
 
@@ -113,7 +114,8 @@ def cv_test():
     
     models = []
     for model_path in os.listdir(config.save_result_path):
-        model = DeitCustomModel(config.model_name)
+        model = DeitCustomModel(config.model_name,
+                                num_labels=config.num_classes)
         
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
