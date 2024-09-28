@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 from utils.TimeDecorator import TimeDecorator
-from configs.base_config import config
 
 class ViTTrainer:
     def __init__(
@@ -85,6 +84,31 @@ class ViTTrainer:
 
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
+        # for batch in progress_bar:
+        #     self.optimizer.zero_grad()
+        #     inputs = {k: v.to(self.device) for k, v in batch.items()}
+
+        #     with autocast(device_type=self.device):
+        #         outputs = self.model(**inputs)
+        #         loss = self.loss_fn(outputs.logits_per_image,
+        #                             outputs.logits_per_text,
+        #                             self.device)
+
+        #     self.scaler.scale(loss).backward()
+        #     self.scaler.step(self.optimizer)
+        #     self.scaler.update()
+
+        #     self.scheduler.step()
+            
+        #     total_loss += loss.item()
+        #     progress_bar.set_postfix(loss=loss.item())
+
+        #     pred = torch.max(outputs.logits_per_image, 1)[1].cpu()
+        #     correct_pred += (pred == torch.arange(len(pred))).sum().item()
+        #     total_pred += len(pred)
+        
+        # return total_loss / len(self.train_loader), correct_pred / total_pred * 100
+        
         for images, targets in progress_bar:
             self.optimizer.zero_grad()
             images, targets = images.to(self.device), targets.to(self.device)
@@ -92,6 +116,7 @@ class ViTTrainer:
             with autocast(device_type=self.device):
                 outputs = self.model(images)
                 loss = self.loss_fn(outputs, targets)
+                
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -103,8 +128,7 @@ class ViTTrainer:
             progress_bar.set_postfix(loss=loss.item())
 
             pred = torch.argmax(outputs, dim=1).cpu()
-            targets = targets.cpu()
-            correct_pred += (pred == targets).sum().item()
+            correct_pred += (pred == torch.arange(len(pred))).sum().item()
             total_pred += len(pred)
         
         return total_loss / len(self.train_loader), correct_pred / total_pred * 100
@@ -116,8 +140,6 @@ class ViTTrainer:
         total_loss = 0.0
         correct_pred = 0
         total_pred = 0
-        class_correct = list(0. for i in range(config.num_classes))
-        class_total = list(0. for i in range(config.num_classes))
         progress_bar = tqdm(self.val_loader, desc="Validating", leave=False)
         
         with torch.no_grad():
@@ -126,22 +148,14 @@ class ViTTrainer:
                 outputs = self.model(images)    
 
                 loss = self.loss_fn(outputs, targets)
+                pt = torch.exp(-loss)
+                loss = (1-pt)**2 * loss
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
 
                 pred = torch.argmax(outputs, dim=1).cpu()
-                targets = targets.cpu()
-                correct_pred += (pred == targets).sum().item()
+                correct_pred += (pred == torch.arange(len(pred))).sum().item()
                 total_pred += len(pred)
-                c = (pred == targets).squeeze()
-                for i in range(len(targets)):
-                    label = targets[i]
-                    class_correct[label] += c[i].item()
-                    class_total[label] += 1
-        
-        for i in range(config.num_classes):
-            print('Accuracy of %5s : %2d %%' % (
-                i, 100 * class_correct[i] / class_total[i]))
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 

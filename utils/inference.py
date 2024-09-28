@@ -92,15 +92,9 @@ def inference_convnext(
             logits = F.softmax(logits, dim=1)
 
 
-<< << << < HEAD
             preds = logits.argmax(dim=1)
 
-== == == =
 
-            preds = logits
-
-
->>>>>> > ab6f7c87d3b4db4f2227ca82253a8e7d2ca262e6
             # 예측 결과 저장
             predictions.extend(preds.cpu().detach().numpy()
                                )  # 결과를 CPU로 옮기고 리스트에 추가
