@@ -10,7 +10,7 @@ from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 from utils.TimeDecorator import TimeDecorator
 
-class DeiTTranier:
+class CLIPTrainer:
     def __init__(
         self, 
         model: nn.Module, 
@@ -21,7 +21,8 @@ class DeiTTranier:
         scheduler: optim.lr_scheduler,
         loss_fn: torch.nn.modules.loss._Loss, 
         epochs: int,
-        result_path: str
+        result_path: str,
+        label_to_text : dict,
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model  # 훈련할 모델
@@ -35,6 +36,7 @@ class DeiTTranier:
         self.result_path = result_path  # 모델 저장 경로
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
+        self.label_to_text = label_to_text
         
         # amp
         self.scaler = GradScaler()
@@ -84,13 +86,15 @@ class DeiTTranier:
 
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
         
-        for images, targets in progress_bar:
+        for batch in progress_bar:
             self.optimizer.zero_grad()
-            images, targets = images.to(self.device), targets.to(self.device)
+            inputs = {k: v.to(self.device) for k, v in batch.items()}
 
             with autocast(device_type=self.device):
-                outputs = self.model(pixel_values=images)
-                loss = self.loss_fn(outputs.logits, targets)
+                outputs = self.model(**inputs)
+                loss = self.loss_fn(outputs.logits_per_image,
+                                    outputs.logits_per_text,
+                                    self.device)
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -101,9 +105,9 @@ class DeiTTranier:
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
 
-            _, pred = torch.max(outputs.logits, 1)
-            correct_pred += (pred == targets).sum().item()
-            total_pred += targets.size(0)
+            pred = torch.max(outputs.logits_per_image, 1)[1].cpu()
+            correct_pred += (pred == torch.arange(len(pred))).sum().item()
+            total_pred += len(pred)
         
         return total_loss / len(self.train_loader), correct_pred / total_pred * 100
 
@@ -117,18 +121,19 @@ class DeiTTranier:
         progress_bar = tqdm(self.val_loader, desc="Validating", leave=False)
         
         with torch.no_grad():
-            for images, targets in progress_bar:
-                images, targets = images.to(self.device), targets.to(self.device)
-                outputs = self.model(pixel_values=images)    
+            for batch in progress_bar:
+                inputs = {k: v.to(self.device) for k, v in batch.items()}
+                outputs = self.model(**inputs)    
 
-                loss = self.loss_fn(outputs.logits, targets)
+                loss = self.loss_fn(outputs.logits_per_image,
+                                    outputs.logits_per_text,
+                                    self.device)
                 total_loss += loss.item()
-
                 progress_bar.set_postfix(loss=loss.item())
 
-                _, pred = torch.max(outputs.logits, 1)
-                correct_pred += (pred == targets).sum().item()
-                total_pred += targets.size(0)
+                pred = torch.max(outputs.logits_per_image, 1)[1].cpu()
+                correct_pred += (pred == torch.arange(len(pred))).sum().item()
+                total_pred += len(pred)
         
         return total_loss / len(self.val_loader), correct_pred / total_pred * 100
 

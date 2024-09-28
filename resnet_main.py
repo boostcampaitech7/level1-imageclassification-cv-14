@@ -6,25 +6,23 @@ import torch
 import pandas as pd
 import torch.optim as optim
 
-
-from configs.deit_config import config
-from utils.data_related import get_dataloader, get_subset
-from transforms.deit_transform import DeiTProcessor
+from configs.resnet_config import config
+from utils.data_related import get_subset, get_dataloader
+from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
-from models.deit_model import DeitCustomModel
+from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.deit_trainer import DeiTTranier
-from utils.inference import inference_deit, load_model, ensemble_predict
+from trainers.resnet_trainer import ResTrainer
+from utils.inference import inference, load_model, extrat_probs, save_probs
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
-
 
 @TimeDecorator()
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
-    
-    train_transform = DeiTProcessor(config.transform_name)
-    val_transform = DeiTProcessor(config.transform_name)
+
+    train_transform = AlbumentationsTransform(is_train=True)
+    val_transform = AlbumentationsTransform(is_train=False)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
@@ -54,8 +52,9 @@ def cv_main():
                                     num_workers=config.num_workers,
                                     shuffle=config.val_shuffle)
         
-        model = DeitCustomModel(config.model_name,
-                                num_labels=config.num_classes)
+        model = TimmModel(config.model_name,
+                          num_classes=config.num_classes,
+                          pretrained=True)
 
         model.to(config.device)
 
@@ -74,7 +73,7 @@ def cv_main():
 
         loss_fn = CrossEntropyLoss()
 
-        trainer = DeiTTranier(
+        trainer = ResTrainer(
             model=model,
             device=config.device,
             train_loader=train_loader,
@@ -93,13 +92,13 @@ def cv_main():
         del model, optimizer, scheduler, trainer
         torch.cuda.empty_cache()
         gc.collect()
-
+    
 
 @TimeDecorator()
 def cv_test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = DeiTProcessor(config.transform_name)
+    test_transform = AlbumentationsTransform(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
@@ -114,23 +113,24 @@ def cv_test():
     
     models = []
     for model_path in os.listdir(config.save_result_path):
-        model = DeitCustomModel(config.model_name,
-                                num_labels=config.num_classes)
+        model = TimmModel(config.model_name,
+                          num_classes=config.num_classes,
+                          pretrained=False)
         
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
         )
 
         models.append(model)
-    
-    predictions = ensemble_predict(models, 
-                                   test_loader, 
-                                   config.device,
-                                   config.num_classes,
-                                   inference_deit)
-    
-    test_info['target'] = predictions
-    test_info = test_info.reset_index().rename(columns={"index": "ID"})
+
+    predictions = extrat_probs(models, 
+                               test_loader,
+                               config.device,
+                               config.num_classes,
+                               inference)
+
+    test_info = save_probs(test_info, predictions)
+    # test_info = test_info.reset_index().rename(columns={"index": "ID"})
     test_info.to_csv(config.output_name, index=False)
 
 if __name__ == "__main__":

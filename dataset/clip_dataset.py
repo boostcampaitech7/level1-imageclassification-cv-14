@@ -13,7 +13,7 @@ class ClipCustomDataset(Dataset):
         root_dir: str,
         info_df: pd.DataFrame,
         transform: Callable,
-        is_inference: bool = False
+        is_inference: bool = False,
     ):
         # 데이터셋의 기본 경로, 이미지 변환 방법, 이미지 경로 및 레이블을 초기화합니다.
         self.root_dir = root_dir  # 이미지 파일들이 저장된 기본 디렉토리
@@ -22,9 +22,9 @@ class ClipCustomDataset(Dataset):
         self.image_paths = info_df['image_path'].tolist()  # 이미지 파일 경로 목록
 
         if not self.is_inference:
-            label_to_text = self.label_to_text(info_df)
-            self.targets = info_df['target'].map(
-                label_to_text).tolist()  # 각 이미지에 대한 레이블 목록
+            self.label_to_text_res = self.label_to_text(info_df)
+            self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록
+            self.label_to_text_res = self.transform.processor.tokenizer([v for v in self.label_to_text_res.values()], padding=True)
 
     def __len__(self) -> int:
         # 데이터셋의 총 이미지 수를 반환합니다.
@@ -32,24 +32,33 @@ class ClipCustomDataset(Dataset):
 
     def __getitem__(self, index: int) -> Union[Tuple[torch.Tensor, int], torch.Tensor]:
         # 주어진 인덱스에 해당하는 이미지를 로드하고 변환을 적용한 후, 이미지와 레이블을 반환합니다.
-        img_path = os.path.join(
-            self.root_dir, self.image_paths[index])  # 이미지 경로 조합
-        # 이미지를 BGR 컬러 포맷의 numpy array로 읽어옵니다.
-        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        # BGR 포맷을 RGB 포맷으로 변환합니다.
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_path = os.path.join(self.root_dir, self.image_paths[index])  # 이미지 경로 조합
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR)  # 이미지를 BGR 컬러 포맷의 numpy array로 읽어옵니다.
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # BGR 포맷을 RGB 포맷으로 변환합니다.
+        if self.is_inference:
+            return {
+                "image" : image
+            }
+        else:
+            return {
+                "image" : image,
+                "text" : self.targets[index]
+            }
+        
+    def preprocess(self, batch):
+        images = [data['image'] for data in batch]
 
         if self.is_inference:
-            return self.transform(image, )
+            texts = None
         else:
-            target = self.targets[index]  # 해당 이미지의 레이블
-            return image, target  # 변환된 이미지와 레이블을 튜플 형태로 반환합니다.
-
-    def label_to_text(self, dataset: pd.DataFrame):
+            texts = [data['text'] for data in batch]
+            
+        return self.transform(images, texts)
+        
+    def label_to_text(self, dataset : pd.DataFrame):
         label_to_text = {}
-        df = dataset.groupby('class_name', group_keys=False).apply(
-            lambda x: x.sample(1), include_groups=False)
-
+        df = dataset.groupby('class_name', group_keys=False).apply(lambda x: x.sample(1))
+        
         str_data = """n02119789 1 kit_fox
         n02100735 2 English_setter
         n02110185 3 Siberian_husky
@@ -1057,9 +1066,6 @@ class ClipCustomDataset(Dataset):
             label_dict[tmp[0]] = tmp[2]
 
         for _, df_data in df.iterrows():
-            dir_name = df_data.image_path.split("/")[0]
-            if dir_name in label_dict:
-                label_to_text[df_data.target] = "a sketch of " + \
-                    label_dict[dir_name]
-
+            if df_data.class_name in label_dict:
+                label_to_text[df_data.target] = "a sketch of " + label_dict[df_data.class_name]
         return label_to_text

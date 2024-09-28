@@ -10,7 +10,7 @@ from torch.cuda.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 from utils.TimeDecorator import TimeDecorator
 
-class DeiTTranier:
+class EfficientNetTrainer:
     def __init__(
         self, 
         model: nn.Module, 
@@ -89,8 +89,8 @@ class DeiTTranier:
             images, targets = images.to(self.device), targets.to(self.device)
 
             with autocast(device_type=self.device):
-                outputs = self.model(pixel_values=images)
-                loss = self.loss_fn(outputs.logits, targets)
+                outputs = self.model(images)
+                loss = self.loss_fn(outputs, targets)
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -101,7 +101,7 @@ class DeiTTranier:
             total_loss += loss.item()
             progress_bar.set_postfix(loss=loss.item())
 
-            _, pred = torch.max(outputs.logits, 1)
+            _, pred = torch.max(outputs, 1)
             correct_pred += (pred == targets).sum().item()
             total_pred += targets.size(0)
         
@@ -119,14 +119,14 @@ class DeiTTranier:
         with torch.no_grad():
             for images, targets in progress_bar:
                 images, targets = images.to(self.device), targets.to(self.device)
-                outputs = self.model(pixel_values=images)    
+                outputs = self.model(images)    
 
-                loss = self.loss_fn(outputs.logits, targets)
+                loss = self.loss_fn(outputs, targets)
                 total_loss += loss.item()
 
                 progress_bar.set_postfix(loss=loss.item())
 
-                _, pred = torch.max(outputs.logits, 1)
+                _, pred = torch.max(outputs, 1)
                 correct_pred += (pred == targets).sum().item()
                 total_pred += targets.size(0)
         

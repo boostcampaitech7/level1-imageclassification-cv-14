@@ -1,48 +1,53 @@
+import torch
 import pandas as pd
-import torch.optim as optim
+import numpy as np
 
 
-from configs.base_config import config
-from utils.data_related import data_split, get_dataloader
+from configs.efficientnet_config import config
+from utils.data_related import get_dataloader
+from transforms.efficientnet_transform import EfficientNetTransform
 from dataset.dataset import CustomDataset
-from models.ViT import ViTModel
-from utils.inference import inference_vit, extract_probs, save_probs
-from transforms.vit_transform import ViTAutoImageTransform
-from utils.model_read import get_model, model_load
-
+from models.base_timm_model import TimmModel
+from utils.inference import inference, save_probs
+from transforms.clip_transform import ClipProcessor
+from utils.model_soup import get_model, model_load
 
 def main():
-    state_dicts = model_load(config.device)
-    model = ViTModel('google/vit-large-patch16-384', config.num_classes)
-    alphal = [1 / len(state_dicts) for i in range(len(state_dicts))]
-    model = get_model(state_dicts, alphal, model)
+    model = TimmModel(config.model_name,
+                      config.num_classes,
+                      False)
+
+    state_dicts = model_load(config.device, config.save_result_path)
+    model = get_model(state_dicts, 1 / len(state_dicts), model)
+
     model.to(config.device)
 
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = ViTAutoImageTransform()
+    test_transform = EfficientNetTransform(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
-                                 test_info,
-                                 test_transform,
-                                 is_inference=True)
-
+                                  test_info,
+                                  test_transform,
+                                  is_inference=True)
+    
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
-                                 shuffle=config.test_shuffle,
                                  num_workers=config.num_workers,
+                                 shuffle=config.test_shuffle,
                                  drop_last=False)
+    
+    
+    predictions = inference(model, 
+                                config.device, 
+                                test_loader)
+    
+    predictions = np.array(predictions)
 
-    predictions = extract_probs([model],
-                                test_loader,
-                                config.device,
-                                config.num_classes,
-                                inference_vit,
-                                )
+    # test_info['target'] = predictions
     test_info = save_probs(test_info, predictions)
     # test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("ViT-L_Weight_Avg_Probs.csv", index=False)
-
+    test_info.to_csv(config.output_name, index=False)
 
 if __name__ == "__main__":
     main()

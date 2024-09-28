@@ -7,14 +7,14 @@ import pandas as pd
 import torch.optim as optim
 
 
-from configs.deit_config import config
+from configs.efficientnet_config import config
 from utils.data_related import get_dataloader, get_subset
-from transforms.deit_transform import DeiTProcessor
+from transforms.efficientnet_transform import EfficientNetTransform
 from dataset.dataset import CustomDataset
-from models.deit_model import DeitCustomModel
+from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.deit_trainer import DeiTTranier
-from utils.inference import inference_deit, load_model, ensemble_predict
+from trainers.efficient_trainer import EfficientNetTrainer
+from utils.inference import inference, load_model, ensemble_predict
 from utils.TimeDecorator import TimeDecorator
 from sklearn.model_selection import StratifiedKFold
 
@@ -23,8 +23,8 @@ from sklearn.model_selection import StratifiedKFold
 def cv_main():
     data_info = pd.read_csv(config.train_data_info_file_path)
     
-    train_transform = DeiTProcessor(config.transform_name)
-    val_transform = DeiTProcessor(config.transform_name)
+    train_transform = EfficientNetTransform(is_train=True)
+    val_transform = EfficientNetTransform(is_train=False)
 
     train_dataset = CustomDataset(config.train_data_dir_path,
                                   data_info,
@@ -54,8 +54,9 @@ def cv_main():
                                     num_workers=config.num_workers,
                                     shuffle=config.val_shuffle)
         
-        model = DeitCustomModel(config.model_name,
-                                num_labels=config.num_classes)
+        model = TimmModel(config.model_name,
+                          num_classes=config.num_classes,
+                          pretrained=True)
 
         model.to(config.device)
 
@@ -74,7 +75,7 @@ def cv_main():
 
         loss_fn = CrossEntropyLoss()
 
-        trainer = DeiTTranier(
+        trainer = EfficientNetTrainer(
             model=model,
             device=config.device,
             train_loader=train_loader,
@@ -99,7 +100,7 @@ def cv_main():
 def cv_test():
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = DeiTProcessor(config.transform_name)
+    test_transform = EfficientNetTransform(is_train=False)
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                   test_info,
@@ -114,8 +115,9 @@ def cv_test():
     
     models = []
     for model_path in os.listdir(config.save_result_path):
-        model = DeitCustomModel(config.model_name,
-                                num_labels=config.num_classes)
+        model = TimmModel(config.model_name,
+                          num_classes=config.num_classes,
+                          pretrained=False)
         
         model.load_state_dict(
             load_model(config.save_result_path, model_path)
@@ -127,7 +129,7 @@ def cv_test():
                                    test_loader, 
                                    config.device,
                                    config.num_classes,
-                                   inference_deit)
+                                   inference)
     
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})

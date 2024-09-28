@@ -2,7 +2,6 @@ import time
 from datetime import timedelta
 
 class TimeDecorator:
-
     def __init__(self) -> None:
         pass
 
