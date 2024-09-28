@@ -19,8 +19,7 @@ def get_model(state_dicts, alphal, model):
 
 def model_load(device):
     state_dicts=[]
-    for f in os.listdir('./train_result'):
-        print(f)
+    for f in os.listdir('./train_result/'):
         if f[-2:] == 'pt':
             print(f'Loading {f}')
             state_dicts.append(torch.load('./train_result/'+f, map_location=device))
