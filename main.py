@@ -11,7 +11,7 @@ from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from models.ViT import ViTModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-# from trainers.base_trainer import Trainer
+from trainers.base_trainer import Trainer
 # from trainers.Cut_Mix_trainer import Trainer
 from utils.inference import inference, load_model
 from transforms.ViT_transform import ViTAutoImageTransform
