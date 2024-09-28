@@ -7,7 +7,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
+
 import numpy as np
+
 
 # 모델 추론을 위한 함수
 def inference_convnext(
@@ -30,7 +32,9 @@ def inference_convnext(
             # 모델을 통해 예측 수행
             logits = model(images)
             logits = F.softmax(logits, dim=1)
+
             preds = logits
+
             
             # 예측 결과 저장
             predictions.extend(preds.cpu().detach().numpy())  # 결과를 CPU로 옮기고 리스트에 추가

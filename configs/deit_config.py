@@ -1,10 +1,9 @@
 import torch
 
-class BaseConfig:
+class deitConfig:
     def __init__(self):
         # 학습 경로
         self.train_data_dir_path = './data/train'
-
         self.train_data_info_file_path = './data/train.csv'
         self.save_result_path = './train_result'
 
@@ -21,10 +20,14 @@ class BaseConfig:
         self.val_shuffle = False
         self.test_shuffle = False
 
+        # 모델이름
+        self.model_name = 'deit_base_patch16_224'
+        self.transform_name ='deit_base_patch16_224'
+
         # 하이퍼 파라미터
         self.batch_size = 64
         self.num_workers = 4
-        self.lr = 0.001  # Learning rate
+        self.lr = 12e-5  # Learning rate
         self.epochs = 5
 
         # 스케줄러 초기화
@@ -36,4 +39,4 @@ class BaseConfig:
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-config = BaseConfig()
+config = deitConfig()
