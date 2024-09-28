@@ -1,5 +1,5 @@
 import os
-import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -32,8 +32,6 @@ class Trainer:
         self.result_path = result_path  # 모델 저장 경로
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
-        self.train_losses = []  # 훈련 손실 기록
-        self.val_losses = []  # 검증 손실 기록
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
@@ -70,8 +68,6 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(images)
             loss = self.loss_fn(outputs, targets)
-            pt = torch.exp(-loss)
-            loss = (1-pt)**2 * loss
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
@@ -106,24 +102,5 @@ class Trainer:
             val_loss = self.validate()
             print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
 
-            self.train_losses.append(train_loss)
-            self.val_losses.append(val_loss)
-
             self.save_model(epoch, val_loss)
             self.scheduler.step()
-
-        # 학습이 끝난 후 손실 그래프 그리기
-        self.plot_losses()
-
-    def plot_losses(self):
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(1, self.epochs + 1), self.train_losses, label='Train Loss')
-        plt.plot(range(1, self.epochs + 1), self.val_losses, label='Validation Loss')
-        plt.xlabel('에폭')
-        plt.ylabel('손실')
-        plt.title('훈련 및 검증 손실 동향')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig(os.path.join(self.result_path, 'training.png'))
-        plt.close()
-        print("손실 그래프가 'training.png'로 저장되었습니다.")

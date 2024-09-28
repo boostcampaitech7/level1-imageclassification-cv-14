@@ -12,9 +12,7 @@ class Convnext_Model(nn.Module):
         num_classes: int, 
         pretrained: bool,
         fine_tune_layers_num: int = 3,  # 학습할 마지막 N개의 블록
-
-        dropout_rate = 0.2,
-
+        dropout_rate = 0.3,
         **kwargs
     ):
         super(Convnext_Model, self).__init__()

@@ -1,13 +1,13 @@
 import pandas as pd
 import torch.optim as optim
 
-from configs.base_config import config
+from configs.CoAt_config import config
 from utils.data_related import data_split, get_dataloader
-from transforms.albumentations_transform import AlbumentationsTransform
+from transforms.CoAt_albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from trainers.CoAt_trainer import Trainer
 from utils.inference import inference, load_model
 
 
@@ -35,7 +35,7 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
     
-    model = TimmModel("resnet18", config.num_classes, True)
+    model = TimmModel('coatnet_rmlp_2_rw_384.sw_in12k_ft_in1k', pretrained=True, num_classes=config.num_classes)
 
     model.to(config.device)
 
@@ -83,7 +83,7 @@ def test():
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
     
-    model = TimmModel("resnet18", config.num_classes, False)
+    model = TimmModel('coatnet_rmlp_2_rw_384.sw_in12k_ft_in1k', pretrained=True, num_classes=config.num_classes)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")

@@ -1,11 +1,15 @@
 import os
-import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
+from utils.Cut_mix import rand_bbox
+from utils.Early_Stopping import EarlyStopping
+import numpy as np
+early_stopping_mode = True
 
 class Trainer:
     def __init__(
@@ -32,8 +36,6 @@ class Trainer:
         self.result_path = result_path  # 모델 저장 경로
         self.best_models = [] # 가장 좋은 상위 3개 모델의 정보를 저장할 리스트
         self.lowest_loss = float('inf') # 가장 낮은 Loss를 저장할 변수
-        self.train_losses = []  # 훈련 손실 기록
-        self.val_losses = []  # 검증 손실 기록
 
     def save_model(self, epoch, loss):
         # 모델 저장 경로 설정
@@ -61,6 +63,8 @@ class Trainer:
     def train_epoch(self) -> float:
         # 한 에폭 동안의 훈련을 진행
         self.model.train()
+        beta = 1.0
+        cutmix_prob = 0.5
         
         total_loss = 0.0
         progress_bar = tqdm(self.train_loader, desc="Training", leave=False)
@@ -68,10 +72,25 @@ class Trainer:
         for images, targets in progress_bar:
             images, targets = images.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
-            outputs = self.model(images)
-            loss = self.loss_fn(outputs, targets)
-            pt = torch.exp(-loss)
-            loss = (1-pt)**2 * loss
+            r = np.random.rand(1)
+            if beta > 0 and r < cutmix_prob:
+                # generate mixed sample
+                lam = np.random.beta(beta, beta)
+                rand_index = torch.randperm(images.size()[0]).cuda()
+                target_a = targets
+                target_b = targets[rand_index]
+                bbx1, bby1, bbx2, bby2 = rand_bbox(images.size(), lam)
+                images[:, :, bbx1:bbx2, bby1:bby2] = images[rand_index, :, bbx1:bbx2, bby1:bby2]
+                # adjust lambda to exactly match pixel ratio
+                lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (images.size()[-1] * images.size()[-2]))
+                # compute output
+                outputs = self.model(images)
+                loss = self.loss_fn(outputs, target_a) * lam + self.loss_fn(outputs, target_b) * (1. - lam)
+            else:
+                outputs = self.model(images)
+                loss = self.loss_fn(outputs, targets)
+
+
             loss.backward()
             self.optimizer.step()
             self.scheduler.step()
@@ -104,26 +123,16 @@ class Trainer:
             
             train_loss = self.train_epoch()
             val_loss = self.validate()
-            print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
+            if early_stopping_mode:
 
-            self.train_losses.append(train_loss)
-            self.val_losses.append(val_loss)
+                EarlyStopping(val_loss, self.model)
+
+                if EarlyStopping.early_stop:
+                    print("Early stopping")
+                    print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
+                    break
+
+            print(f"Epoch {epoch+1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}\n")
 
             self.save_model(epoch, val_loss)
             self.scheduler.step()
-
-        # 학습이 끝난 후 손실 그래프 그리기
-        self.plot_losses()
-
-    def plot_losses(self):
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(1, self.epochs + 1), self.train_losses, label='Train Loss')
-        plt.plot(range(1, self.epochs + 1), self.val_losses, label='Validation Loss')
-        plt.xlabel('에폭')
-        plt.ylabel('손실')
-        plt.title('훈련 및 검증 손실 동향')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig(os.path.join(self.result_path, 'training.png'))
-        plt.close()
-        print("손실 그래프가 'training.png'로 저장되었습니다.")

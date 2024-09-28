@@ -9,6 +9,7 @@ class CrossEntropyLoss(nn.Module):
         super(CrossEntropyLoss, self).__init__()
         self.loss_fn = nn.CrossEntropyLoss()
 
+
     def forward(
         self, 
         outputs: torch.Tensor, 

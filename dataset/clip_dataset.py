@@ -6,20 +6,21 @@ import torch
 import pandas as pd
 from torch.utils.data import Dataset
 
+
 class ClipCustomDataset(Dataset):
     def __init__(
-        self, 
-        root_dir: str, 
-        info_df: pd.DataFrame, 
+        self,
+        root_dir: str,
+        info_df: pd.DataFrame,
         transform: Callable,
         is_inference: bool = False,
     ):
         # 데이터셋의 기본 경로, 이미지 변환 방법, 이미지 경로 및 레이블을 초기화합니다.
         self.root_dir = root_dir  # 이미지 파일들이 저장된 기본 디렉토리
         self.transform = transform  # 이미지에 적용될 변환 처리
-        self.is_inference = is_inference # 추론인지 확인
+        self.is_inference = is_inference  # 추론인지 확인
         self.image_paths = info_df['image_path'].tolist()  # 이미지 파일 경로 목록
-        
+
         if not self.is_inference:
             self.label_to_text_res = self.label_to_text(info_df)
             self.targets = info_df['target'].map(self.label_to_text_res).tolist()  # 각 이미지에 대한 레이블 목록

@@ -49,7 +49,7 @@ def main():
         optimizer=optimizer,
         scheduler=None,
         loss_fn=loss_fn,
-        epochs=10,
+        epochs=15,
         result_path=config.save_result_path,
         n_splits=5  # K-Fold의 K 값, 예를 들어 5로 설정
         )
@@ -90,10 +90,9 @@ def ensemble_inference(models, device, test_loader):
             avg_output = np.mean(model_outputs, axis=0)  # 모델들의 예측 평균
             all_predictions.append(avg_output)
 
-    # 최종 예측 클래스는 평균 확률에서 가장 높은 것을 선택
-    final_predictions = np.argmax(np.vstack(all_predictions), axis=1)
+    all_softmax_probs = np.vstack(all_softmax_probs)
     
-    return final_predictions
+    return all_softmax_probs
 
 def test():
     test_info = pd.read_csv(config.test_data_info_file_path)
@@ -124,6 +123,12 @@ def test():
     
     # 장치 설정 (GPU 사용 가능 시 GPU 사용)
     device = config.device
+
+    softmax_probs = ensemble_inference(models, device, test_loader)
+
+    
+    softmax_df = pd.DataFrame(softmax_probs)
+    softmax_df.to_csv("softmax_probabilities.csv", index=False)
     
     # 앙상블 예측 수행
     predictions = ensemble_inference(models, device, test_loader)
@@ -134,5 +139,5 @@ def test():
     test_info.to_csv("output_ensemble.csv", index=False)
 
 if __name__ == "__main__":
-    main()
+    #main()
     test()
