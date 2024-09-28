@@ -1,5 +1,6 @@
 import torch
 
+
 class BaseConfig:
     def __init__(self):
         # 학습 경로
@@ -11,7 +12,9 @@ class BaseConfig:
         # 추론 경로
         self.test_data_dir_path = './data/test'
         self.test_data_info_file_path = './data/test.csv'
-
+        
+        self.output_name = 'vit_probs_output.csv'
+        
         # 데이터 분할
         self.test_size = 0.2
 
@@ -20,12 +23,14 @@ class BaseConfig:
         self.train_shuffle = True
         self.val_shuffle = False
         self.test_shuffle = False
+        self.cv_shuffle = True
 
         # 하이퍼 파라미터
         self.batch_size = 64
         self.num_workers = 4
-        self.lr = 0.001  # Learning rate
-        self.epochs = 5
+        self.lr = 1e-3  # Learning rate
+        self.epochs = 6
+        self.n_splits = 5
 
         # 스케줄러 초기화
         self.scheduler_gamma = 0.1  # 학습률을 현재의 10%로 감소
@@ -35,5 +40,6 @@ class BaseConfig:
 
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 config = BaseConfig()

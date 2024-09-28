@@ -1,4 +1,4 @@
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Subset
 from sklearn.model_selection import train_test_split
 
 def get_dataloader(dataset : Dataset, **kwargs):

@@ -2,25 +2,25 @@ import pandas as pd
 import torch.optim as optim
 
 
-from configs.yj_cv_config import config
+from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
 from dataset.dataset import CustomDataset
-from models.yj_convnext_model import Convnext_Model
-from utils.inference import inference, load_model , inference_convnext
-from transforms.yj_cv_transform import AlbumentationsTransform
-from utils.Model_Soup import get_model, model_load
+from models.ViT import ViTModel
+from utils.inference import inference_vit, extract_probs, save_probs
+from transforms.vit_transform import ViTAutoImageTransform
+from utils.model_read import get_model, model_load
+
 
 def main():
     state_dicts = model_load(config.device)
-    model =  Convnext_Model(model_name = 'convnext_xxlarge.clip_laion2b_soup_ft_in1k', num_classes = 500, pretrained = True)
+    model = ViTModel('google/vit-large-patch16-384', config.num_classes)
     alphal = [1 / len(state_dicts) for i in range(len(state_dicts))]
     model = get_model(state_dicts, alphal, model)
     model.to(config.device)
 
     test_info = pd.read_csv(config.test_data_info_file_path)
 
-    test_transform = AlbumentationsTransform(is_train=False)
-
+    test_transform = ViTAutoImageTransform()
 
     test_dataset = CustomDataset(config.test_data_dir_path,
                                  test_info,
@@ -30,21 +30,18 @@ def main():
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
                                  shuffle=config.test_shuffle,
-                                 num_workers = config.num_workers,
+                                 num_workers=config.num_workers,
                                  drop_last=False)
-    
-    
-    predictions = inference_convnext(model,
-                            config.device,
-                            test_loader)
 
-    test_info['target'] = predictions
+    predictions = extract_probs([model],
+                                test_loader,
+                                config.device,
+                                config.num_classes,
+                                inference_vit,
+                                )
+    test_info = save_probs(test_info, predictions)
     # test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("probs_convnext_xxlarge.csv", index=False)
-
-
-
-
+    test_info.to_csv("ViT-L_Weight_Avg_Probs.csv", index=False)
 
 
 if __name__ == "__main__":
