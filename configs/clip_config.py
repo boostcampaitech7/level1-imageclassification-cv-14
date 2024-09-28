@@ -1,5 +1,6 @@
 import torch
 
+
 class ClipConfig:
     def __init__(self):
         # 학습 경로
@@ -38,5 +39,6 @@ class ClipConfig:
 
         # Device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 config = ClipConfig()
