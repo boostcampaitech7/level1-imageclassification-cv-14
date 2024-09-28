@@ -3,13 +3,13 @@ import torch
 class BaseConfig:
     def __init__(self):
         # 학습 경로
-        self.train_data_dir_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/train'
-        self.train_data_info_file_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/train.csv'
+        self.train_data_dir_path = './data/train'
+        self.train_data_info_file_path = '.data/train.csv'
         self.save_result_path = '/data/ephemeral/home/level1-imageclassification-cv-14/train_result'
 
         # 추론 경로
-        self.test_data_dir_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/test'
-        self.test_data_info_file_path = '/data/ephemeral/home/level1-imageclassification-cv-14/data/test.csv'
+        self.test_data_dir_path = './data/test'
+        self.test_data_info_file_path = './data/test.csv'
 
         # 데이터 분할
         self.test_size = 0.2
