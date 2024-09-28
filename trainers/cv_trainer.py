@@ -3,7 +3,9 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from configs.base_config import config
+
 
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
@@ -13,6 +15,7 @@ from torch.utils.data import DataLoader, SubsetRandomSampler
 
 from transforms.sketch_transform_develop import SketchTransform
 from dataset.dataset import CustomDataset
+
 from models.convnext_model import Convnext_Model
 
 
@@ -32,7 +35,9 @@ class Trainer:
         loss_fn: torch.nn.modules.loss._Loss,
         epochs: int,
         result_path: str,
+
         n_splits: int = 5,  # K-Fold의 K 값, 기본값은 5
+
     ):
         # 클래스 초기화: 모델, 디바이스, 데이터 로더 등 설정
         self.model = model
@@ -47,7 +52,9 @@ class Trainer:
         self.n_splits = n_splits  # K-Fold의 K 값
         self.best_models = []
         self.lowest_loss = float('inf')
+
         self.fold_best_models = []
+
 
     def train_with_cv(self):
         # StratifiedKFold를 사용한 교차 검증 학습
@@ -68,16 +75,20 @@ class Trainer:
             train_subset = CustomDataset(self.train_dataset.root_dir,
                                         info_df.iloc[train_idx].reset_index(drop=True),
                                         transform=train_transform)  # 훈련용 Transform 적용
+
             val_subset = CustomDataset(self.train_dataset.root_dir, 
+
                                     info_df.iloc[val_idx].reset_index(drop=True),
                                     transform=val_transform)  # 검증용 Transform 적용
 
         # 데이터 로더 생성
+
             train_loader = DataLoader(train_subset, batch_size=16, shuffle=True, num_workers = 4)
             val_loader = DataLoader(val_subset, batch_size=16, shuffle=False, num_workers = 4)
 
             self.model = Convnext_Model(model_name = "convnext_large_mlp.clip_laion2b_soup_ft_in12k_in1k_320", num_classes = 500, pretrained = True)
             self.model.to(config.device)
+
 
             # 옵티마이저 초기화
             self.optimizer = optim.Adam(
@@ -88,6 +99,7 @@ class Trainer:
 
             # 스케줄러 초기화: StepLR 스케줄러를 사용하여 학습률 조정
             # 스케줄러 초기화
+
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer, 
                 mode='min',  # 손실이 감소하지 않으면 학습률을 줄임
@@ -100,10 +112,11 @@ class Trainer:
             best_loss = float('inf')
             best_model_path = None
 
+
             # 각 fold의 학습 및 검증
             for epoch in range(self.epochs):
                 print(f"Epoch {epoch + 1}/{self.epochs}")
-                
+
                 start_time = time.time()
 
                 # 올바른 데이터 로더 전달
@@ -116,6 +129,7 @@ class Trainer:
                 print(f"Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
                 print(f"Epoch {epoch + 1}, Train Acc: {train_accuracy:.4f}, Validation Acc: {val_accuracy:.4f}")
                 print(f"Epoch {epoch + 1} took {epoch_time:.2f} seconds\n")
+
 
                 # 저장할 모델 경로 정의
                 model_path = os.path.join(self.result_path, f'fold_{fold}_best_model.pt')
@@ -140,6 +154,7 @@ class Trainer:
         """
         os.makedirs(self.result_path, exist_ok=True)
         torch.save(self.model.state_dict(), model_path)
+
 
     def train_epoch(self, train_loader) -> float:
         # 한 에폭 동안의 훈련을 진행
@@ -199,4 +214,6 @@ class Trainer:
         average_loss = total_loss / len(val_loader)
         accuracy = correct_predictions / total_predictions * 100  # 퍼센트로 변환
         
+
         return [average_loss, accuracy]
+
