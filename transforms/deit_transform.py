@@ -4,7 +4,7 @@ import torch
 import cv2
 import numpy as np
 
-class SketchTransform:
+class deitTransform:
     def __init__(self, is_train=True):
         if is_train:
             # 훈련 데이터에 대한 전처리 파이프라인 (라인 강조 포함)
