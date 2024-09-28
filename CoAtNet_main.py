@@ -1,13 +1,14 @@
 import pandas as pd
+import torch 
 import torch.optim as optim
 
-from configs.base_config import config
+from configs.CoAtNet_5_config import config
 from utils.data_related import data_split, get_dataloader
-from transforms.albumentations_transform import AlbumentationsTransform
+from transforms.CoAtNet_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
-from models.base_timm_model import TimmModel
+from models.CoAtNet_5_model import CoAtNetV5FineTune
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from trainers.CoAtNet_5_trainer import Trainer
 from utils.inference import inference, load_model
 
 
@@ -35,22 +36,18 @@ def main():
                                 batch_size=config.batch_size,
                                 shuffle=config.val_shuffle)
     
-    model = TimmModel("resnet18", config.num_classes, True)
+    model = CoAtNetV5FineTune(config.num_classes, True)
 
     model.to(config.device)
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=config.lr
-    )
+    optimizer = optim.AdamW(
+    filter(lambda p: p.requires_grad, model.parameters()),
+    lr=config.lr,
+    weight_decay=config.weight_decay)
 
-    scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
 
-    scheduler = optim.lr_scheduler.StepLR(
-        optimizer,
-        step_size=scheduler_step_size,
-        gamma=config.scheduler_gamma
-    )
+    # 스케줄러 설정
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.epochs // 2)
 
     loss_fn = CrossEntropyLoss()
 
@@ -63,7 +60,8 @@ def main():
         scheduler=scheduler,
         loss_fn=loss_fn,
         epochs=config.epochs,
-        result_path=config.save_result_path
+        result_path=config.save_result_path,
+        freeze_backbone_epochs=config.freeze_backbone_epochs  # 백본 고정 해제 에폭 설정
     )
 
     trainer.train()
@@ -83,7 +81,7 @@ def test():
                                  shuffle=config.test_shuffle,
                                  drop_last=False)
     
-    model = TimmModel("resnet18", config.num_classes, False)
+    model = CoAtNetV5FineTune(config.num_classes, False)
 
     model.load_state_dict(
         load_model(config.save_result_path, "best_model.pt")
@@ -95,8 +93,9 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("output.csv", index=False)
+    test_info.to_csv("output-4.csv", index=False)
 
 if __name__ == "__main__":
     main()
     test()
+    
