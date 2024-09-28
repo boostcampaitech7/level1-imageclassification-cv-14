@@ -41,7 +41,7 @@ class Convnext_Model(nn.Module):
         for layer in list(self.model.children())[-fine_tune_layers_num:]:
             for param in layer.parameters():
                 param.requires_grad = True
-                
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model.forward_features(x)  # 특징 추출
         x = self.gap(x)  # Global Average Pooling 적용

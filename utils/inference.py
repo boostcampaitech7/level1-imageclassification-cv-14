@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -38,18 +39,19 @@ def inference(
 
 # 모델 추론을 위한 함수
 
+
 def inference_vit(
-    model: nn.Module, 
-    device: torch.device, 
+    model: nn.Module,
+    device: torch.device,
     test_loader: DataLoader,
 ):
     # 모델을 평가 모드로 설정
     model.to(device)
     model.eval()
-    
+
     predictions = []
     with torch.no_grad():  # Gradient 계산을 비활성화
-        for images in tqdm(test_loader):            
+        for images in tqdm(test_loader):
             # 모델을 통해 예측 수행
             images = images.to(device)
 
@@ -59,11 +61,12 @@ def inference_vit(
             # preds = logits.argmax(dim=1)
 
             # 예측 결과 저장
-            predictions.extend(logits.cpu().detach().numpy())# 결과를 CPU로 옮기고 리스트에 추가
-    
+            predictions.extend(logits.cpu().detach().numpy()
+                               )  # 결과를 CPU로 옮기고 리스트에 추가
+
     del model
     torch.cuda.empty_cache()
-    
+
     return predictions
 
 
@@ -99,6 +102,7 @@ def inference_convnext(
 def load_model(path, name):
     return torch.load(os.path.join(path, name), map_location='cpu')
 
+
 def ensemble_predict(models, dataloader, device, num_classes, inference_func, **kwargs):
     '''
     soft voting 방식의 ensemble
@@ -112,6 +116,7 @@ def ensemble_predict(models, dataloader, device, num_classes, inference_func, **
     predictions = predictions / len(models)
     return predictions.argmax(axis=1)
 
+
 def extract_probs(models, dataloader, device, num_classes, inference_func, **kwargs):
     '''
     동일한 모델의 cross validation 결과를 각 클래스별 확률로 soft voting한 결과 반환
@@ -123,6 +128,7 @@ def extract_probs(models, dataloader, device, num_classes, inference_func, **kwa
 
     predictions = predictions / len(models)
     return predictions
+
 
 def save_probs(df, pred):
     for i in range(pred.shape[1]):

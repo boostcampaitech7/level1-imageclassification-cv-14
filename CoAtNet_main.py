@@ -1,16 +1,18 @@
 import pandas as pd
+import torch
 import torch.optim as optim
 
-from configs.base_config import config
+from configs.CoAtNet_5_config import config
 from utils.data_related import data_split, get_dataloader
 # from transforms.albumentations_transform import AlbumentationsTransform
 from dataset.dataset import CustomDataset
 from models.base_timm_model import TimmModel
 from models.ViT import ViTModel
 from losses.cross_entropy_loss import CrossEntropyLoss
-from trainers.base_trainer import Trainer
+from trainers.CoAtNet_5_trainer import Trainer
 from utils.inference import inference, load_model
 from transforms.vit_transform import ViTAutoImageTransform
+
 
 def main():
     train_info = pd.read_csv(config.train_data_info_file_path)
@@ -33,30 +35,26 @@ def main():
 
     train_loader = get_dataloader(train_dataset,
                                   batch_size=config.batch_size,
-                                  num_workers = config.num_workers,
+                                  num_workers=config.num_workers,
                                   shuffle=config.train_shuffle)
 
     val_loader = get_dataloader(val_dataset,
                                 batch_size=config.batch_size,
-                                num_workers = config.num_workers,
+                                num_workers=config.num_workers,
                                 shuffle=config.val_shuffle)
 
     model = ViTModel('google/vit-base-patch16-224', config.num_classes)
 
     model.to(config.device)
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=config.lr
-    )
+    optimizer = optim.AdamW(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr=config.lr,
+        weight_decay=config.weight_decay)
 
-    scheduler_step_size = len(train_loader) * config.epochs_per_lr_decay
-
-    scheduler = optim.lr_scheduler.StepLR(
-        optimizer,
-        step_size=scheduler_step_size,
-        gamma=config.scheduler_gamma
-    )
+    # 스케줄러 설정
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=config.epochs // 2)
 
     loss_fn = CrossEntropyLoss()
 
@@ -69,9 +67,9 @@ def main():
         scheduler=scheduler,
         loss_fn=loss_fn,
         epochs=config.epochs,
-        result_path=config.save_result_path
+        result_path=config.save_result_path,
+        freeze_backbone_epochs=config.freeze_backbone_epochs  # 백본 고정 해제 에폭 설정
     )
-    
 
     trainer.train()
 
@@ -90,7 +88,7 @@ def test():
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
                                  shuffle=config.test_shuffle,
-                                 num_workers = config.num_workers,
+                                 num_workers=config.num_workers,
                                  drop_last=False)
 
     model = ViTModel('google/vit-base-patch16-224', config.num_classes)
@@ -105,7 +103,7 @@ def test():
 
     test_info['target'] = predictions
     test_info = test_info.reset_index().rename(columns={"index": "ID"})
-    test_info.to_csv("output.csv", index=False)
+    test_info.to_csv("output-4.csv", index=False)
 
 
 if __name__ == "__main__":

@@ -6,9 +6,10 @@ from configs.base_config import config
 from utils.data_related import data_split, get_dataloader
 from dataset.dataset import CustomDataset
 from models.ViT import ViTModel
-from utils.inference import inference_vit,extract_probs, save_probs
+from utils.inference import inference_vit, extract_probs, save_probs
 from transforms.vit_transform import ViTAutoImageTransform
 from utils.model_read import get_model, model_load
+
 
 def main():
     state_dicts = model_load(config.device)
@@ -29,10 +30,9 @@ def main():
     test_loader = get_dataloader(test_dataset,
                                  batch_size=config.batch_size,
                                  shuffle=config.test_shuffle,
-                                 num_workers = config.num_workers,
+                                 num_workers=config.num_workers,
                                  drop_last=False)
-    
-    
+
     predictions = extract_probs([model],
                                 test_loader,
                                 config.device,
@@ -42,10 +42,6 @@ def main():
     test_info = save_probs(test_info, predictions)
     # test_info = test_info.reset_index().rename(columns={"index": "ID"})
     test_info.to_csv("ViT-L_Weight_Avg_Probs.csv", index=False)
-
-
-
-
 
 
 if __name__ == "__main__":
