@@ -24,6 +24,9 @@
 <br/>
 
 # 📋 Project Overview
+
+![project_image](https://github.com/user-attachments/assets/ea7e0af2-4c97-4156-b2d4-600d6939edcb)
+
 Sketch이미지 분류 경진대회는 주어진 데이터를 활용하여 모델을 제작하고 어떤 객체를 나타내는지 분류하는 대회입니다.
 
 Computer Vision에서는 다양한 형태의 이미지 데이터가 활용되고 있습니다. 이 중, 비정형 데이터의 정확한 인식과 분류는 여전히 해결해야 할 주요 과제로 자리잡고 있습니다. 특히 사진과 같은 일반 이미지 데이터에 기반하여 발전을 이루어나아가고 있습니다.
